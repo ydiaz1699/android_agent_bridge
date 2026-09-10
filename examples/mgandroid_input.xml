@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<hierarchy rotation="0">
+  <node index="0" text="" resource-id="" class="android.widget.FrameLayout" package="com.android.mgandroid" content-desc="" clickable="false" enabled="true" bounds="[0,0][1920,1080]">
+    <node index="0" text="Buscar canal" resource-id="search_title" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="false" enabled="true" bounds="[500,120][900,180]" />
+    <node index="1" text="" resource-id="search_container" class="android.widget.LinearLayout" package="com.android.mgandroid" content-desc="Campo de búsqueda" clickable="true" enabled="true" bounds="[460,220][1460,340]">
+      <node index="0" text="" resource-id="com.android.mgandroid:id/search_input" class="android.widget.EditText" package="com.android.mgandroid" content-desc="Nombre del canal" clickable="false" enabled="true" bounds="[500,240][1280,320]" />
+    </node>
+    <node index="2" text="" resource-id="password_input" class="android.widget.EditText" package="com.android.mgandroid" content-desc="Código" password="true" clickable="false" enabled="true" bounds="[500,380][1280,460]" />
+    <node index="3" text="Buscar" resource-id="search_button" class="android.widget.Button" package="com.android.mgandroid" content-desc="" clickable="true" enabled="true" bounds="[1320,220][1460,340]" />
+  </node>
+</hierarchy>
