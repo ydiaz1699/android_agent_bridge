@@ -88,20 +88,26 @@ En Linux/macOS se sustituyen las rutas por rutas absolutas del checkout. No se d
 | `android_doctor` | Lista dispositivos ADB y app en foreground. |
 | `android_app_list` | Lista aplicaciones launchables. |
 | `android_app_open` | Abre una app por alias o package; `fresh=true` fuerza inicio limpio. |
+| `android_mgandroid_wait_ready` | Espera a que MGAndroid esté en foreground y el pack reconozca `home`; devuelve package, activity y screen. |
+| `android_mgandroid_ensure_home` | Vuelve a `home` con un número limitado de `BACK` y usa restart como fallback seguro. |
+| `android_mgandroid_restart` | Hace un único arranque limpio de MGAndroid y espera el estado `home`. |
+| `android_mgandroid_close` | Hace `force-stop` únicamente sobre el package de MGAndroid y no navega otra aplicación. |
 | `android_ui_frame` | Devuelve el frame compacto `app`, `screen`, `read` y `do`. |
 | `android_ui_do` | Ejecuta una acción numérica o un verbo estable y devuelve el siguiente frame. |
 | `android_knowledge_resolve` | Devuelve el resumen de un knowledge pack sin volcar sus archivos completos. |
 
-Flujo recomendado:
+Flujo recomendado para MGAndroid:
 
 ```text
 android_doctor
-→ android_app_open(name="mgandroid", fresh=true)
+→ android_mgandroid_restart
 → android_ui_frame
 → android_ui_do(action="1")
-→ android_ui_do(action="open", text=... solo si corresponde)
+→ android_mgandroid_ensure_home cuando se necesite recuperar home
+→ android_mgandroid_close al terminar
 ```
 
+`android_app_open` sigue disponible para otras aplicaciones y no declara por sí solo que la app esté lista. Para MGAndroid, `android_mgandroid_restart` combina inicio limpio y espera de readiness.
 `android_ui_do` admite números de frame y verbos como `back`, `home`, `up`, `down`, `more` y `type`. Las coordenadas y el XML no se envían al LLM.
 
 ## Seguridad y límites

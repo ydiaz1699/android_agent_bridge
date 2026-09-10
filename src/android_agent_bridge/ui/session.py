@@ -58,6 +58,11 @@ class UISession:
         self._page = 1
         self._signature = ""
 
+    def reset(self) -> None:
+        """Forget transient pagination and node-signature state after lifecycle changes."""
+        self._page = 1
+        self._signature = ""
+
     def frame(self, *, page: int | None = None, xml: str | None = None, preserve_page: bool = False) -> Frame:
         snapshot = self.device.snapshot(xml)
         pack = self._resolve_pack(snapshot.package)
