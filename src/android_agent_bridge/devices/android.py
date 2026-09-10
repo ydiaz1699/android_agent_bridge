@@ -31,6 +31,74 @@ class AndroidDevice:
             return "unknown", "unknown"
         return match.group(1), match.group(2)
 
+    def list_apps(self) -> list[dict[str, str]]:
+        """List launchable packages without exposing raw shell output."""
+        output = self.transport.shell(
+            (
+                "cmd",
+                "package",
+                "query-activities",
+                "--brief",
+                "-a",
+                "android.intent.action.MAIN",
+                "-c",
+                "android.intent.category.LAUNCHER",
+            )
+        )
+        packages = sorted(
+            {
+                match.group(1)
+                for line in output.splitlines()
+                if (match := re.match(r"^\\s*([a-zA-Z][\\w.]*)/", line))
+            }
+        )
+        return [
+            {"name": package.rsplit(".", 1)[-1], "package": package}
+            for package in packages
+        ]
+
+    def resolve_package(self, name: str) -> str | None:
+        """Resolve an alias or installed package without invoking a shell."""
+        value = name.strip()
+        if not value:
+            return None
+        aliases = {
+            "settings": "com.android.settings",
+            "chrome": "com.android.chrome",
+            "browser": "com.android.chrome",
+            "gmail": "com.google.android.gm",
+            "whatsapp": "com.whatsapp",
+            "contacts": "com.google.android.contacts",
+            "youtube": "com.google.android.youtube",
+            "camera": "com.android.camera2",
+            "mgandroid": "com.android.mgandroid",
+            "mg android": "com.android.mgandroid",
+        }
+        candidate = aliases.get(value.casefold(), value)
+        if re.fullmatch(r"[a-zA-Z][\\w]*(?:\\.[\\w]+)+", candidate):
+            return candidate
+        token = re.sub(r"\\s+", "", value.casefold())
+        for app in self.list_apps():
+            package = app["package"]
+            if package.rsplit(".", 1)[-1].casefold() == token or token in package.casefold():
+                return package
+        return None
+
+    def open_app(self, name: str, *, fresh: bool = False) -> dict[str, str | bool]:
+        """Open an installed launchable app, optionally from a clean start."""
+        package = self.resolve_package(name)
+        if package is None:
+            raise ValueError(f"No installed launchable app matches: {name}")
+        if fresh:
+            self.transport.shell(("am", "force-stop", package))
+            self.transport.keyevent("KEYCODE_HOME")
+        output = self.transport.shell(
+            ("monkey", "-p", package, "-c", "android.intent.category.LAUNCHER", "1")
+        )
+        if "No activities found" in output or "aborted" in output.casefold():
+            raise RuntimeError(f"App has no launchable activity: {package}")
+        return {"name": name, "package": package, "fresh": fresh}
+
     def snapshot(
         self,
         xml: str | None = None,
