@@ -39,6 +39,10 @@ Esta primera base implementa:
 
 Las integraciones REST, Home Assistant, OCR y visión se incorporarán sobre estas interfaces, no como segundos ejecutores.
 
+## MCP para clientes LLM
+
+El bridge incluye un adaptador MCP opcional que mantiene una sesión ADB persistente y expone `android_doctor`, `android_app_list`, `android_app_open`, `android_ui_frame`, `android_ui_do` y `android_knowledge_resolve`. El servidor MCP no contiene un LLM: es la puerta de entrada para Claude Desktop, Kiro u otro cliente compatible. Consulta [docs/MCP.md](docs/MCP.md) para instalación y configuración.
+
 ## Uso rápido
 
 ```bash
