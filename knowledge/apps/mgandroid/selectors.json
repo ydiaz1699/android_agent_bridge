@@ -8,7 +8,17 @@
   },
   "live": {
     "current_channel": [{"resource_id": "tv_live_title"}],
+    "panel": [{"resource_id": "channel_panel"}],
+    "category": [{"resource_id": "channel_category"}],
+    "channel_row": [{"resource_id": "channel_row"}],
     "channel": [{"resource_id": "channel_name"}],
+    "channel_number": [{"resource_id": "channel_number"}],
+    "epg": [{"resource_id": "program_view"}],
     "speed": [{"resource_id": "tv_main_speed"}]
+  },
+  "input": {
+    "search_field": [{"resource_id": "search_input", "class_name": "android.widget.EditText"}],
+    "submit": [{"resource_id": "search_button", "text": "Buscar"}],
+    "password_field": [{"resource_id": "password_input", "class_name": "android.widget.EditText"}]
   }
 }

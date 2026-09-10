@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<hierarchy rotation="0">
+  <node index="0" text="" resource-id="" class="android.widget.FrameLayout" package="com.android.mgandroid" content-desc="" clickable="false" enabled="true" bounds="[0,0][1920,1080]">
+    <node index="0" text="Cargando contenido" resource-id="loading_message" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="false" enabled="true" bounds="[700,480][1220,540]" />
+    <node index="1" text="Reintentar" resource-id="retry_button" class="android.widget.Button" package="com.android.mgandroid" content-desc="" clickable="true" enabled="true" bounds="[820,580][1100,660]" />
+  </node>
+</hierarchy>

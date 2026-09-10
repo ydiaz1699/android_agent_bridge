@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<hierarchy rotation="0">
+  <node index="0" text="" resource-id="" class="android.widget.FrameLayout" package="com.android.mgandroid" content-desc="" clickable="false" enabled="true" bounds="[0,0][1920,1080]">
+    <node index="0" text="ESPN HD" resource-id="tv_live_title" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="false" enabled="true" bounds="[960,40][1400,100]" />
+    <node index="1" text="Programación" resource-id="program_view" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="false" enabled="true" bounds="[960,120][1800,220]" />
+    <node index="2" text="" resource-id="channel_panel" class="android.widget.LinearLayout" package="com.android.mgandroid" content-desc="Panel de canales" clickable="true" scrollable="true" enabled="true" bounds="[0,100][900,1080]">
+      <node index="0" text="Deportes" resource-id="com.android.mgandroid:id/channel_category" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="true" enabled="true" bounds="[40,140][400,210]" />
+      <node index="1" text="" resource-id="channel_row" class="android.widget.LinearLayout" package="com.android.mgandroid" content-desc="" clickable="true" enabled="true" bounds="[40,240][820,330]">
+        <node index="0" text="101" resource-id="channel_number" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="false" enabled="true" bounds="[60,255][130,315]" />
+        <node index="1" text="ESPN HD" resource-id="com.android.mgandroid:id/channel_name" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="false" enabled="true" bounds="[160,255][500,315]" />
+        <node index="2" text="12:00 Noticias deportivas" resource-id="program_view" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="false" enabled="true" bounds="[520,255][790,315]" />
+      </node>
+      <node index="2" text="" resource-id="channel_row" class="android.widget.LinearLayout" package="com.android.mgandroid" content-desc="" clickable="true" enabled="true" bounds="[40,350][820,440]">
+        <node index="0" text="102" resource-id="channel_number" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="false" enabled="true" bounds="[60,365][130,425]" />
+        <node index="1" text="FOX Sports" resource-id="channel_name" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="false" enabled="true" bounds="[160,365][500,425]" />
+        <node index="2" text="13:00 Fútbol en vivo" resource-id="program_view" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="false" enabled="true" bounds="[520,365][790,425]" />
+      </node>
+    </node>
+  </node>
+</hierarchy>

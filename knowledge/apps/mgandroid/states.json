@@ -4,6 +4,11 @@
       {"resource_id": "iv_logo"}
     ]
   },
+  "input": {
+    "indicators": [
+      {"resource_id": "search_input"}
+    ]
+  },
   "live": {
     "indicators": [
       {"resource_id": "tv_live_title"}

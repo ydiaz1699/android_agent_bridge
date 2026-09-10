@@ -186,3 +186,92 @@ def test_selector_supports_ancestor_hierarchy() -> None:
         },
     )
     assert node.text == "PELÍCULA"
+
+
+def test_mgandroid_channels_fixture_covers_panel_category_channel_number_and_epg() -> None:
+    xml = (ROOT / "examples" / "mgandroid_channels.xml").read_text(encoding="utf-8")
+    tree = parse_ui_xml(xml)
+    pack = KnowledgeRegistry(KNOWLEDGE).resolve("mgandroid")
+    assert pack is not None
+    resolver = SelectorResolver()
+
+    panel = resolver.resolve(tree, pack.selectors["live"]["panel"][0])
+    assert panel.scrollable is True
+    assert panel.bounds is not None
+    assert resolver.resolve(
+        tree,
+        {"resource_id": "channel_category", "text": "Deportes"},
+    ).text == "Deportes"
+
+    number = resolver.resolve(
+        tree,
+        {"resource_id": "channel_number", "text": "102", "ancestor": {"resource_id": "channel_row"}},
+    )
+    assert number.text == "102"
+
+    channel = resolver.resolve(
+        tree,
+        {
+            "resource_id": "channel_name",
+            "text_contains": "FOX",
+            "ancestor": {"resource_id": "channel_row", "class_name": "android.widget.LinearLayout"},
+        },
+    )
+    assert channel.resource_id == "channel_name"
+    assert channel.tap_bounds() is not None
+
+    epg = resolver.resolve(tree, {"resource_id": "program_view", "text_contains": "Fútbol"})
+    assert epg.text == "13:00 Fútbol en vivo"
+    assert pack.matches_screen(tree) == "live"
+
+
+def test_mgandroid_input_fixture_exposes_edittexts_password_and_submit() -> None:
+    xml = (ROOT / "examples" / "mgandroid_input.xml").read_text(encoding="utf-8")
+    tree = parse_ui_xml(xml)
+    pack = KnowledgeRegistry(KNOWLEDGE).resolve("mgandroid")
+    assert pack is not None
+    resolver = SelectorResolver()
+
+    search = resolver.resolve(tree, pack.selectors["input"]["search_field"][0])
+    password = resolver.resolve(tree, pack.selectors["input"]["password_field"][0])
+    submit = resolver.resolve(tree, pack.selectors["input"]["submit"][0])
+    assert search.editable is True
+    assert search.tap_bounds() is not None
+    assert password.password is True
+    assert submit.text == "Buscar"
+    assert pack.matches_screen(tree) == "input"
+
+    frame = FrameBuilder().build(tree, app="mgandroid", screen="input")
+    assert any(action.verb == "type" and action.kind == "input" for action in frame.actions)
+    assert any(action.verb == "type2" and action.kind == "input" for action in frame.actions)
+    assert any(action.verb == "send" and action.kind == "submit" for action in frame.actions)
+
+
+def test_mgandroid_unknown_fixture_does_not_claim_known_screen() -> None:
+    xml = (ROOT / "examples" / "unknown_screen.xml").read_text(encoding="utf-8")
+    tree = parse_ui_xml(xml)
+    pack = KnowledgeRegistry(KNOWLEDGE).resolve("mgandroid")
+    assert pack is not None
+
+    assert pack.matches_screen(tree) == "unknown"
+    frame = FrameBuilder().build(tree, app="mgandroid", screen=pack.matches_screen(tree))
+    assert frame.screen == "unknown"
+    assert "Cargando contenido" in frame.read
+
+
+def test_named_pack_selectors_support_region_and_ancestor_boundaries() -> None:
+    xml = (ROOT / "examples" / "mgandroid_channels.xml").read_text(encoding="utf-8")
+    tree = parse_ui_xml(xml)
+    resolver = SelectorResolver()
+
+    panel = resolver.resolve(tree, {"resource_id": "channel_panel", "region": {"left": 0, "top": 100, "right": 900, "bottom": 1080}})
+    assert panel.resource_id == "channel_panel"
+    channel = resolver.resolve(
+        tree,
+        {
+            "resource_id": "channel_name",
+            "text": "ESPN HD",
+            "ancestor": {"resource_id": "channel_row", "class_name": "android.widget.LinearLayout"},
+        },
+    )
+    assert channel.text == "ESPN HD"

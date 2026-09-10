@@ -48,7 +48,10 @@ class Frame:
 class FrameBuilder:
     """Build frames without exposing coordinates or raw XML to the agent."""
 
-    _submit = re.compile(r"^(send|submit|post|reply|publish|search|go|done|next|confirm|ok)\b", re.IGNORECASE)
+    _submit = re.compile(
+        r"^(send|submit|post|reply|publish|search|go|done|next|confirm|ok|buscar|enviar|aceptar)\b",
+        re.IGNORECASE,
+    )
     _status = re.compile(
         r"^(\d{1,2}:\d{2}|delivered|read|sent|sending|seen|online|typing\.\.\.)$", re.IGNORECASE
     )
