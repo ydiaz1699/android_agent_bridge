@@ -27,7 +27,8 @@ El bridge presenta la pantalla como una interfaz compacta para el agente:
 
 - **Numérica:** `ui do 2`; válida solo para el frame leído inmediatamente antes.
 - **Verbo:** `ui do back`, `ui do down`, `ui do type "texto"`; se vuelve a resolver contra la pantalla viva y es la forma recomendada para workflows.
-- **Paginación:** `ui do more`; revela acciones adicionales sin cambiar el significado de las ya mostradas.
+- **Paginación:** `ui do more`; revela acciones adicionales sin cambiar el significado de las ya mostradas. La implementación mantiene las acciones de páginas anteriores con sus números y conserva `more` en una posición estable; las acciones nuevas se añaden después.
+- **Navegación TV:** `up`, `down`, `left` y `right` son eventos DPAD. `scroll_up` y `scroll_down` son swipes separados sobre el viewport detectado.
 
 Cada acción debe producir una nueva lectura o un error estructurado:
 

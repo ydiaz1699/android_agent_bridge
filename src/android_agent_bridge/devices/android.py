@@ -49,7 +49,7 @@ class AndroidDevice:
             {
                 match.group(1)
                 for line in output.splitlines()
-                if (match := re.match(r"^\\s*([a-zA-Z][\\w.]*)/", line))
+                if (match := re.match(r"^\s*([a-zA-Z][\w.]*)/", line))
             }
         )
         return [
@@ -75,11 +75,12 @@ class AndroidDevice:
             "mg android": "com.android.mgandroid",
         }
         candidate = aliases.get(value.casefold(), value)
-        if re.fullmatch(r"[a-zA-Z][\\w]*(?:\\.[\\w]+)+", candidate):
-            return candidate
-        token = re.sub(r"\\s+", "", value.casefold())
-        for app in self.list_apps():
-            package = app["package"]
+        apps = self.list_apps()
+        installed = {app["package"] for app in apps}
+        if re.fullmatch(r"[a-zA-Z][\w]*(?:\.[\w]+)+", candidate):
+            return candidate if candidate in installed else None
+        token = re.sub(r"\s+", "", value.casefold())
+        for package in sorted(installed):
             if package.rsplit(".", 1)[-1].casefold() == token or token in package.casefold():
                 return package
         return None

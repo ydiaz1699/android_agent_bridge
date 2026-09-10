@@ -27,7 +27,7 @@
     "from": "live",
     "intent": "select_by_name",
     "strategies": [
-      {"resource_id": "channel_name"},
+      {"resource_id": "channel_name", "text_contains": "$channel"},
       {"text_contains": "$channel"}
     ]
   }

@@ -855,7 +855,22 @@ Estas piezas pueden inspirar adapters o tests, pero no deben duplicar la arquite
 
 ## 10.1 Backlog de implementación verificable
 
-Las prioridades anteriores se convierten aquí en tareas ejecutables. Cada tarea tiene una sola salida principal, dependencias explícitas y una condición de cierre verificable. Todas están `PENDIENTES`: la auditoría no implementa código.
+Las prioridades anteriores se convierten aquí en tareas ejecutables. Cada tarea tiene una sola salida principal, dependencias explícitas y una condición de cierre verificable. Los estados se actualizan conforme a la implementación; una tarea parcial permanece `EN_PROGRESO`.
+
+### Incremento implementado en esta rama
+
+El primer incremento ya implementa parcialmente los P0 y permanece deliberadamente acotado:
+
+- corrección de los regex y validación contra aplicaciones launchable en `AndroidDevice`;
+- `SelectorResolver` determinista con IDs completos/sufijos, texto, `text_contains`, regex, content description, clase, región y padre clickeable;
+- validación tipada de `actions.json` con allowlist de intents y rechazo de campos arbitrarios;
+- ejecución de acciones declarativas `navigate` y `select_by_name` mediante `UISession` y dump fresco;
+- acciones de knowledge pack visibles como verbos estables en el frame;
+- DPAD separado de `scroll` con viewport efímero;
+- paginación acumulativa con posición estable de `more`;
+- cinco pruebas sin dispositivo mediante `FakeADBTransport`.
+
+Estos cambios no completan todavía AB-P0-01, AB-P0-03, AB-P0-04, AB-P0-06, AB-P0-07 ni AB-P0-08: faltan fixtures adicionales, jerarquía avanzada, validación con dumps reales, corrección definitiva de nombres MGAndroid y el gate completo de regresión. Por eso sus estados se mantienen `EN_PROGRESO`.
 
 ### Secuencia de ejecución
 
@@ -886,14 +901,14 @@ AB-P2-01..AB-P2-08 discovery, diagnóstico, percepción y adapters
 
 | ID | Tarea | Fuentes de procedencia | Archivos objetivo | Dependencias | Validación / definición de terminado | Estado |
 |---|---|---|---|---|---|---|
-| AB-P0-01 | Crear fixtures sanitizados y `FakeADBTransport` | `examples/mgandroid_home.xml`, dumps de `Flujo_android`, tests de `pyt-androidtv` | `tests/`, `examples/`, posible `tests/fakes.py` | Ninguna | Fixtures cubren home, live, panel de canales, input y pantalla desconocida; todas las pruebas pueden ejecutarse sin dispositivo | PENDIENTE |
-| AB-P0-02 | Corregir resolución de apps y validación de package | `AndroidDevice.list_apps()`, `resolve_package()`, salida ADB de `tvbox-controller` | `devices/android.py`, `tests/test_devices.py` | AB-P0-01 | Alias `mgandroid`, package completo y lista de launchables funcionan con fixtures; package inválido se rechaza | PENDIENTE |
-| AB-P0-03 | Definir normalización canónica de resource IDs | `tvbox-controller/ids.yaml`, XML de `Flujo_android`, pack actual | `knowledge/registry.py`, pack MGAndroid, `tests/test_knowledge.py` | AB-P0-01 | Se decide si el pack guarda IDs completos o sufijos; se prueban ambos solo mediante una función explícita y documentada | PENDIENTE |
-| AB-P0-04 | Implementar selector declarativo ordenado | `Flujo_android/selector.py`, `selectors.json` | `ui/selectors.py`, `knowledge/registry.py`, tests | AB-P0-03 | Soporta ID exacto/parcial, texto exacto/contiene, regex, content-desc, clase, región, jerarquía y padre clickeable; devuelve nodo o error estable | PENDIENTE |
-| AB-P0-05 | Compilar acciones del knowledge pack | `actions.json`, `tvbox-controller/actions.py` | `knowledge/`, `workflows/model.py`, tests | AB-P0-04 | `actions.json` se valida, tiene schema estable, resuelve selector y no permite shell/coordenadas persistentes | PENDIENTE |
-| AB-P0-06 | Conectar actions con `UISession` | `UISession.do()`, contrato `read → do → read` | `ui/session.py`, `ui/frame.py`, tests | AB-P0-05 | Una acción declarativa se ejecuta contra dump fresco, devuelve `UIResult` y frame posterior; fallos no dejan estado ambiguo | PENDIENTE |
+| AB-P0-01 | Crear fixtures sanitizados y `FakeADBTransport` | `examples/mgandroid_home.xml`, dumps de `Flujo_android`, tests de `pyt-androidtv` | `tests/`, `examples/`, posible `tests/fakes.py` | Ninguna | Fixtures cubren home, live, panel de canales, input y pantalla desconocida; todas las pruebas pueden ejecutarse sin dispositivo | EN_PROGRESO |
+| AB-P0-02 | Corregir resolución de apps y validación de package | `AndroidDevice.list_apps()`, `resolve_package()`, salida ADB de `tvbox-controller` | `devices/android.py`, `tests/test_devices.py` | AB-P0-01 | Alias `mgandroid`, package completo y lista de launchables funcionan con fixtures; package inválido se rechaza | COMPLETADA |
+| AB-P0-03 | Definir normalización canónica de resource IDs | `tvbox-controller/ids.yaml`, XML de `Flujo_android`, pack actual | `knowledge/registry.py`, pack MGAndroid, `tests/test_knowledge.py` | AB-P0-01 | Se decide si el pack guarda IDs completos o sufijos; se prueban ambos solo mediante una función explícita y documentada | EN_PROGRESO |
+| AB-P0-04 | Implementar selector declarativo ordenado | `Flujo_android/selector.py`, `selectors.json` | `ui/selectors.py`, `knowledge/registry.py`, tests | AB-P0-03 | Soporta ID exacto/parcial, texto exacto/contiene, regex, content-desc, clase, región, jerarquía y padre clickeable; devuelve nodo o error estable | EN_PROGRESO |
+| AB-P0-05 | Compilar acciones del knowledge pack | `actions.json`, `tvbox-controller/actions.py` | `knowledge/`, `workflows/model.py`, tests | AB-P0-04 | `actions.json` se valida, tiene schema estable, resuelve selector y no permite shell/coordenadas persistentes | COMPLETADA |
+| AB-P0-06 | Conectar actions con `UISession` | `UISession.do()`, contrato `read → do → read` | `ui/session.py`, `ui/frame.py`, tests | AB-P0-05 | Una acción declarativa se ejecuta contra dump fresco, devuelve `UIResult` y frame posterior; fallos no dejan estado ambiguo | EN_PROGRESO |
 | AB-P0-07 | Consolidar pack MGAndroid y corregir nombres | `Flujo_android/mgandroid.py`, `tvbox-controller/ids.yaml`, pack actual | `knowledge/apps/mgandroid/*.json`, fixtures y docs | AB-P0-03, AB-P0-06 | Manifest, estados, selectores y acciones solo declaran capacidades respaldadas; `channel_name`/`tv_live_name` queda resuelto con evidencia | PENDIENTE |
-| AB-P0-08 | Resolver contrato de paginación y navegación TV | `movicom`, `docs/AGENT_PROTOCOL.md`, `UISession` | `ui/frame.py`, `ui/session.py`, `docs/AGENT_PROTOCOL.md`, tests | AB-P0-01 | `more` tiene semántica única; números/IDs válidos están documentados; DPAD no usa swipe fijo y `scroll` es separado | PENDIENTE |
+| AB-P0-08 | Resolver contrato de paginación y navegación TV | `movicom`, `docs/AGENT_PROTOCOL.md`, `UISession` | `ui/frame.py`, `ui/session.py`, `docs/AGENT_PROTOCOL.md`, tests | AB-P0-01 | `more` tiene semántica única; números/IDs válidos están documentados; DPAD no usa swipe fijo y `scroll` es separado | EN_PROGRESO |
 | AB-P0-09 | Crear gate de regresión del núcleo | CI de `pyt-androidtv`, ejemplos del bridge | `tests/`, workflow CI si existe | AB-P0-02..AB-P0-08 | Parser, selector, frame, pack, executor, paginación, DPAD y errores pasan con `compileall`, Ruff y tests reproducibles | PENDIENTE |
 
 ### Tareas P1 — MGAndroid y Android TV
