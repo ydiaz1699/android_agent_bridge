@@ -64,7 +64,7 @@ python -m compileall -q src
 PYTHONPATH=src python -m android_agent_bridge.adapters.cli --help
 ```
 
-Consulta [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) y [docs/AGENT_PROTOCOL.md](docs/AGENT_PROTOCOL.md) antes de añadir una nueva capa o integración.
+Consulta [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) y [docs/AGENT_PROTOCOL.md](docs/AGENT_PROTOCOL.md) antes de añadir una nueva capa o integración. La auditoría completa de capacidades y faltantes está en [docs/AUDIT_FOUR_REPOSITORIES.md](docs/AUDIT_FOUR_REPOSITORIES.md).
 
 ## Procedencia conceptual
 
