@@ -837,6 +837,8 @@ Esta rama completa la cobertura de fixtures y consolida el pack declarativo sin 
 
 La discrepancia histórica `channel_name`/`tv_live_name` queda resuelta en la consolidación estática: la evidencia de `Flujo_android` y `tvbox-controller` respalda `tv_live_name` como nombre real de canal, mientras `channel_name` se conserva solo como fallback sintético. La validación de runtime del APK sigue siendo una tarea `NO_DECIDIBLE` hasta disponer de un dump real. El gate AB-P0-09 queda cerrado en este incremento: 13 tests pasan, `compileall`, Ruff y `git diff --check` terminan correctamente.
 
+El siguiente incremento implementa AB-P1-01 sin añadir un segundo transporte: `MGAndroidLifecycle` coordina el mismo `AndroidDevice`, `KnowledgePack` y `UISession` persistentes. `wait_ready` solo acepta el estado declarativo `home`; `ensure_home` limita `BACK` y no navega una aplicación ajena; `restart` usa una sola apertura `fresh=true`; `close` valida y fuerza el cierre únicamente del package del manifest. El runtime MCP expone estas operaciones con `error_code` estable y resultados sin XML, bounds ni coordenadas. La compatibilidad runtime del APK continúa requiriendo ejecución en un dispositivo real.
+
 ### Secuencia de ejecución
 
 ```text
@@ -880,7 +882,7 @@ AB-P2-01..AB-P2-08 discovery, diagnóstico, percepción y adapters
 
 | ID | Tarea | Fuentes de procedencia | Archivos objetivo | Dependencias | Validación / definición de terminado | Estado |
 |---|---|---|---|---|---|---|
-| AB-P1-01 | Implementar lifecycle MGAndroid | `Flujo_android/app.py`, `Flujo_android/mgandroid.py`, `tvbox-controller/mgandroid.py` | `workflows/`, pack MGAndroid, `ui/session.py` | AB-P0-07 | `wait_ready`, `ensure_home`, `restart` y `close` tienen timeout, estado de origen, recovery limitado y frame de salida | PENDIENTE |
+| AB-P1-01 | Implementar lifecycle MGAndroid | `Flujo_android/app.py`, `Flujo_android/mgandroid.py`, `tvbox-controller/mgandroid.py` | `workflows/mgandroid.py`, `devices/android.py`, `ui/session.py`, MCP y tests | AB-P0-07 | `wait_ready`, `ensure_home`, `restart` y `close` tienen timeout, estado declarativo, recovery limitado, reset de sesión y tools MCP sobre el mismo runtime; no se navega una app ajena | COMPLETADA |
 | AB-P1-02 | Implementar navegación de categorías y estado MGAndroid | `Flujo_android/mgandroid.py`, `tvbox-controller/mgandroid.py` | workflows y pack | AB-P1-01 | Live, movies, series, anime, special, settings, history y favorites se ejecutan con selectores; cada transición se verifica | PENDIENTE |
 | AB-P1-03 | Implementar panel y búsqueda de canales | `channel_extractor.py`, `tvbox-controller/mgandroid.py` | pack, workflows, fixtures | AB-P0-07, AB-P0-08 | Panel, categorías, lista, canal actual, selección por nombre, búsqueda y up/down funcionan sin `left > 300` fijo | PENDIENTE |
 | AB-P1-04 | Añadir snapshot de dispositivo y estado TV | `pyt-androidtv/models.py`, `BaseTV`, `basetv/state.py` | `devices/`, `diagnostics/`, exceptions, tests | AB-P0-09 | Doctor distingue metadata, power, foreground y media state; no incluye PII por defecto ni altera frames | PENDIENTE |

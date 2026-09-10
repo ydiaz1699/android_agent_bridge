@@ -100,6 +100,12 @@ class AndroidDevice:
             raise RuntimeError(f"App has no launchable activity: {package}")
         return {"name": name, "package": package, "fresh": fresh}
 
+    def stop_app(self, package: str) -> None:
+        """Force-stop one validated Android package without exposing shell input."""
+        if re.fullmatch(r"[A-Za-z][\w]*(?:\.[\w]+)+", package) is None:
+            raise ValueError(f"Invalid Android package: {package}")
+        self.transport.shell(("am", "force-stop", package))
+
     def snapshot(
         self,
         xml: str | None = None,

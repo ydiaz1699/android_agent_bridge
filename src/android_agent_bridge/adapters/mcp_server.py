@@ -18,6 +18,7 @@ from android_agent_bridge.adb.transport import ADBError, SubprocessADB
 from android_agent_bridge.devices.android import AndroidDevice
 from android_agent_bridge.knowledge.registry import KnowledgeRegistry
 from android_agent_bridge.ui.session import UISession
+from android_agent_bridge.workflows.mgandroid import LifecycleError, MGAndroidLifecycle
 
 
 def default_knowledge_root() -> Path:
@@ -84,6 +85,79 @@ class BridgeRuntime:
             except (ADBError, RuntimeError, ValueError) as exc:
                 return {"error": str(exc)}
 
+    def mgandroid_wait_ready(
+        self,
+        *,
+        timeout: float = 20.0,
+        interval: float = 0.5,
+    ) -> dict[str, Any]:
+        with self._lock:
+            try:
+                snapshot = self._mgandroid_lifecycle().wait_ready(
+                    timeout=timeout,
+                    interval=interval,
+                )
+                return {"ready": True, **snapshot.to_dict()}
+            except LifecycleError as exc:
+                return {"error": str(exc), "error_code": exc.code}
+            except (ADBError, RuntimeError, ValueError) as exc:
+                return {"error": str(exc), "error_code": "lifecycle_failed"}
+
+    def mgandroid_ensure_home(
+        self,
+        *,
+        timeout: float = 20.0,
+        interval: float = 0.5,
+        max_back: int = 5,
+    ) -> dict[str, Any]:
+        with self._lock:
+            try:
+                snapshot = self._mgandroid_lifecycle().ensure_home(
+                    timeout=timeout,
+                    interval=interval,
+                    max_back=max_back,
+                )
+                return {"ready": True, **snapshot.to_dict()}
+            except LifecycleError as exc:
+                return {"error": str(exc), "error_code": exc.code}
+            except (ADBError, RuntimeError, ValueError) as exc:
+                return {"error": str(exc), "error_code": "lifecycle_failed"}
+
+    def mgandroid_restart(
+        self,
+        *,
+        timeout: float = 20.0,
+        interval: float = 0.5,
+    ) -> dict[str, Any]:
+        with self._lock:
+            try:
+                snapshot = self._mgandroid_lifecycle().restart(
+                    timeout=timeout,
+                    interval=interval,
+                )
+                return {"ready": True, **snapshot.to_dict()}
+            except LifecycleError as exc:
+                return {"error": str(exc), "error_code": exc.code}
+            except (ADBError, RuntimeError, ValueError) as exc:
+                return {"error": str(exc), "error_code": "lifecycle_failed"}
+
+    def mgandroid_close(self) -> dict[str, Any]:
+        with self._lock:
+            try:
+                lifecycle = self._mgandroid_lifecycle()
+                lifecycle.close()
+                return {"closed": True, "package": lifecycle.package}
+            except LifecycleError as exc:
+                return {"error": str(exc), "error_code": exc.code}
+            except (ADBError, RuntimeError, ValueError) as exc:
+                return {"error": str(exc), "error_code": "lifecycle_failed"}
+
+    def _mgandroid_lifecycle(self) -> MGAndroidLifecycle:
+        pack = self.registry.resolve("mgandroid")
+        if pack is None:
+            raise LifecycleError("knowledge_pack_not_found", "MGAndroid knowledge pack not found")
+        return MGAndroidLifecycle(self.device, pack, session=self.session)
+
     def knowledge_resolve(self, value: str) -> dict[str, Any]:
         with self._lock:
             pack = self.registry.resolve(value)
@@ -123,6 +197,40 @@ def build_server(runtime: BridgeRuntime):
     def android_app_open(name: str, fresh: bool = False) -> dict[str, Any]:
         """Open an app by alias or package; use fresh to force a clean start."""
         return runtime.app_open(name, fresh)
+
+    @server.tool()
+    def android_mgandroid_wait_ready(
+        timeout: float = 20.0,
+        interval: float = 0.5,
+    ) -> dict[str, Any]:
+        """Wait until MGAndroid is foreground and its pack recognizes home."""
+        return runtime.mgandroid_wait_ready(timeout=timeout, interval=interval)
+
+    @server.tool()
+    def android_mgandroid_ensure_home(
+        timeout: float = 20.0,
+        interval: float = 0.5,
+        max_back: int = 5,
+    ) -> dict[str, Any]:
+        """Return MGAndroid to home with bounded back navigation and restart fallback."""
+        return runtime.mgandroid_ensure_home(
+            timeout=timeout,
+            interval=interval,
+            max_back=max_back,
+        )
+
+    @server.tool()
+    def android_mgandroid_restart(
+        timeout: float = 20.0,
+        interval: float = 0.5,
+    ) -> dict[str, Any]:
+        """Force-stop, launch and wait for MGAndroid home."""
+        return runtime.mgandroid_restart(timeout=timeout, interval=interval)
+
+    @server.tool()
+    def android_mgandroid_close() -> dict[str, Any]:
+        """Force-stop MGAndroid without navigating another foreground application."""
+        return runtime.mgandroid_close()
 
     @server.tool()
     def android_ui_frame() -> dict[str, Any]:
