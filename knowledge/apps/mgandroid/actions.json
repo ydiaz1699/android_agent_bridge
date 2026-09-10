@@ -3,7 +3,7 @@
     "from": "home",
     "intent": "navigate",
     "strategies": [
-      {"resource_id": "vod_category_name", "text": "VIVO"},
+      {"selector": "home.category", "text": "VIVO"},
       {"text": "VIVO"}
     ]
   },
@@ -11,7 +11,7 @@
     "from": "home",
     "intent": "navigate",
     "strategies": [
-      {"resource_id": "vod_category_name", "text": "PELÍCULA"},
+      {"selector": "home.category", "text": "PELÍCULA"},
       {"text": "PELÍCULA"}
     ]
   },
@@ -19,7 +19,7 @@
     "from": "home",
     "intent": "navigate",
     "strategies": [
-      {"resource_id": "vod_category_name", "text": "SERIE"},
+      {"selector": "home.category", "text": "SERIE"},
       {"text": "SERIE"}
     ]
   },
@@ -27,7 +27,7 @@
     "from": "live",
     "intent": "select_by_name",
     "strategies": [
-      {"resource_id": "channel_name", "text_contains": "$channel"},
+      {"selector": "live.channel", "text_contains": "$channel"},
       {"text_contains": "$channel"}
     ]
   }

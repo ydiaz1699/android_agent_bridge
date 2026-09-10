@@ -8,6 +8,7 @@
   },
   "live": {
     "current_channel": [{"resource_id": "tv_live_title"}],
+    "channel": [{"resource_id": "channel_name"}],
     "speed": [{"resource_id": "tv_main_speed"}]
   }
 }

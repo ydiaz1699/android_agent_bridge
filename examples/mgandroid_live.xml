@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<hierarchy rotation="0">
+  <node index="0" text="" resource-id="" class="android.widget.FrameLayout" package="com.android.mgandroid" content-desc="" clickable="false" bounds="[0,0][1920,1080]">
+    <node index="0" text="ESPN HD" resource-id="tv_live_title" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="false" bounds="[40,40][400,100]" />
+    <node index="1" text="2.0 Mbps" resource-id="tv_main_speed" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="false" bounds="[1600,40][1850,100]" />
+    <node index="2" text="ESPN HD" resource-id="com.android.mgandroid:id/channel_name" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="true" bounds="[100,240][500,330]" />
+    <node index="3" text="FOX Sports" resource-id="channel_name" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="true" bounds="[100,350][500,440]" />
+  </node>
+</hierarchy>

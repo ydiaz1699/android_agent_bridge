@@ -92,7 +92,7 @@ def test_pack_actions_are_validated_and_expose_required_parameters() -> None:
     actions = pack.action_specs
     assert actions["open_live"].parameters == frozenset()
     assert actions["select_channel"].parameters == frozenset({"channel"})
-    compile_actions(pack.actions)
+    compile_actions(pack.actions, selectors=pack.selectors)
 
 
 def test_session_exposes_and_executes_declarative_home_action() -> None:
@@ -108,10 +108,7 @@ def test_session_exposes_and_executes_declarative_home_action() -> None:
 
 
 def test_session_exposes_and_executes_parameterized_knowledge_action() -> None:
-    live_xml = """<hierarchy><node class="android.widget.FrameLayout" bounds="[0,0][1920,1080]">
-      <node text="ESPN HD" resource-id="channel_name" class="android.widget.TextView" clickable="true" bounds="[100,200][500,300]" />
-      <node text="ESPN HD" resource-id="tv_live_title" class="android.widget.TextView" bounds="[10,10][300,80]" />
-    </node></hierarchy>"""
+    live_xml = (ROOT / "examples" / "mgandroid_live.xml").read_text(encoding="utf-8")
     transport = FakeADBTransport(live_xml)
     session = UISession(AndroidDevice(transport), KnowledgeRegistry(KNOWLEDGE))
 
@@ -120,7 +117,7 @@ def test_session_exposes_and_executes_parameterized_knowledge_action() -> None:
     result = session.do("select_channel", text="ESPN")
 
     assert result.did == "select_channel"
-    assert ("tap", ("300", "250")) in transport.calls
+    assert ("tap", ("300", "285")) in transport.calls
 
 
 def test_session_uses_dpad_and_preserves_first_more_number() -> None:
@@ -146,3 +143,46 @@ def test_session_uses_dpad_and_preserves_first_more_number() -> None:
 
     session.do("up")
     assert ("keyevent", ("KEYCODE_DPAD_UP",)) in transport.calls
+
+
+
+def test_actions_expand_named_pack_selectors_and_reject_unknown_fields() -> None:
+    pack = KnowledgeRegistry(KNOWLEDGE).resolve("mgandroid")
+    assert pack is not None
+    open_live = pack.action_specs["open_live"]
+    assert open_live.strategies[0]["resource_id"] == "vod_category_name"
+    assert open_live.strategies[0]["text"] == "VIVO"
+
+    with pytest.raises(ValueError, match="Unsupported strategy fields"):
+        compile_actions(
+            {
+                "unsafe": {
+                    "from": "home",
+                    "intent": "navigate",
+                    "strategies": [{"shell": "input tap 1 1"}],
+                }
+            }
+        )
+
+
+def test_ui_result_serializes_stable_error_code() -> None:
+    transport = FakeADBTransport()
+    session = UISession(AndroidDevice(transport), KnowledgeRegistry(KNOWLEDGE))
+
+    result = session.do("does_not_exist")
+
+    assert result.to_dict()["error_code"] == "action_not_found"
+    assert result.to_dict()["error"] == "no action 'does_not_exist'"
+
+
+
+def test_selector_supports_ancestor_hierarchy() -> None:
+    tree = parse_ui_xml(HOME_XML)
+    node = SelectorResolver().resolve(
+        tree,
+        {
+            "text": "PELÍCULA",
+            "ancestor": {"resource_id": "category_container", "class_name": "android.widget.LinearLayout"},
+        },
+    )
+    assert node.text == "PELÍCULA"

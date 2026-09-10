@@ -6,6 +6,14 @@ from dataclasses import dataclass
 from typing import Any
 
 from android_agent_bridge.devices.android import AndroidDevice
+from android_agent_bridge.errors import (
+    ACTION_FAILED,
+    ACTION_NOT_FOUND,
+    ACTION_NOT_SUPPORTED,
+    INPUT_REQUIRED,
+    KNOWLEDGE_PACK_NOT_FOUND,
+    PAGINATION_END,
+)
 from android_agent_bridge.knowledge.actions import KnowledgeActionError
 from android_agent_bridge.knowledge.registry import KnowledgePack, KnowledgeRegistry
 
@@ -18,6 +26,7 @@ class UIResult:
 
     did: str | None = None
     error: str | None = None
+    error_code: str | None = None
     frame: Frame | None = None
 
     def to_dict(self) -> dict[str, Any]:
@@ -26,6 +35,8 @@ class UIResult:
             result["did"] = self.did
         if self.error is not None:
             result["error"] = self.error
+        if self.error_code is not None:
+            result["error_code"] = self.error_code
         if self.frame is not None:
             result["frame"] = self.frame.to_dict()
         return result
@@ -71,15 +82,19 @@ class UISession:
         current = self.frame(preserve_page=True)
         action = self._find_action(current, identifier)
         if action is None:
-            return UIResult(error=f"no action {identifier!r}", frame=current)
+            return UIResult(
+                error=f"no action {identifier!r}",
+                error_code=ACTION_NOT_FOUND,
+                frame=current,
+            )
         if action.kind == "more":
             if current.total_pages <= self._page:
-                return UIResult(error="no more pages", frame=current)
+                return UIResult(error="no more pages", error_code=PAGINATION_END, frame=current)
             self._page += 1
             return UIResult(did=f"more (page {self._page})", frame=self.frame(preserve_page=True))
         if action.kind == "input":
             if not text:
-                return UIResult(error="input action requires text", frame=current)
+                return UIResult(error="input action requires text", error_code=INPUT_REQUIRED, frame=current)
             self._tap(action)
             self.device.transport.input_text(text)
             return UIResult(did=f"typed {text!r}", frame=self.frame())
@@ -101,13 +116,21 @@ class UISession:
                 "home": "KEYCODE_HOME",
             }.get(action.verb)
             if key is None:
-                return UIResult(error=f"unsupported navigation: {action.verb}", frame=current)
+                return UIResult(
+                    error=f"unsupported navigation: {action.verb}",
+                    error_code=ACTION_NOT_SUPPORTED,
+                    frame=current,
+                )
             self.device.transport.keyevent(key)
             return UIResult(did=action.verb, frame=self.frame())
         if action.kind == "scroll":
             self._scroll(action)
             return UIResult(did=action.verb, frame=self.frame())
-        return UIResult(error=f"unsupported action kind: {action.kind}", frame=current)
+        return UIResult(
+            error=f"unsupported action kind: {action.kind}",
+            error_code=ACTION_NOT_SUPPORTED,
+            frame=current,
+        )
 
     def _knowledge_actions(self, pack: KnowledgePack | None, tree, screen: str) -> list[Action]:
         if pack is None or screen == "unknown":
@@ -130,33 +153,57 @@ class UISession:
 
     def _do_knowledge_action(self, current: Frame, action: Action, text: str | None) -> UIResult:
         if action.action_id is None:
-            return UIResult(error="knowledge action has no identifier", frame=current)
+            return UIResult(
+                error="knowledge action has no identifier",
+                error_code=ACTION_NOT_SUPPORTED,
+                frame=current,
+            )
         pack = self._resolve_pack(current.app)
         if pack is None:
-            return UIResult(error="knowledge pack not found", frame=current)
+            return UIResult(
+                error="knowledge pack not found",
+                error_code=KNOWLEDGE_PACK_NOT_FOUND,
+                frame=current,
+            )
         spec = pack.action_specs.get(action.action_id)
         if spec is None:
-            return UIResult(error=f"unknown knowledge action: {action.action_id}", frame=current)
+            return UIResult(
+                error=f"unknown knowledge action: {action.action_id}",
+                error_code=ACTION_NOT_FOUND,
+                frame=current,
+            )
         try:
             if spec.parameters:
                 if not text:
-                    return UIResult(error="knowledge action requires text", frame=current)
+                    return UIResult(
+                        error="knowledge action requires text",
+                        error_code=INPUT_REQUIRED,
+                        frame=current,
+                    )
                 snapshot = self.device.snapshot()
                 live_pack = self._resolve_pack(snapshot.package)
                 live_screen = live_pack.matches_screen(snapshot.tree) if live_pack else "unknown"
                 if live_pack is None or live_pack.identifier != pack.identifier:
-                    return UIResult(error="state_mismatch: application changed", frame=current)
+                    return UIResult(
+                        error="state_mismatch: application changed",
+                        error_code="state_mismatch",
+                        frame=current,
+                    )
                 if live_screen != spec.from_screen:
-                    return UIResult(error=f"state_mismatch: expected {spec.from_screen}", frame=current)
+                    return UIResult(
+                        error=f"state_mismatch: expected {spec.from_screen}",
+                        error_code="state_mismatch",
+                        frame=current,
+                    )
                 params = {name: text for name in spec.parameters}
                 node = spec.resolve(snapshot.tree, params=params)
                 self.device.tap_node(node)
             else:
                 self._tap(action)
         except KnowledgeActionError as exc:
-            return UIResult(error=f"{exc.code}: {exc}", frame=current)
+            return UIResult(error=f"{exc.code}: {exc}", error_code=exc.code, frame=current)
         except ValueError as exc:
-            return UIResult(error=f"action_failed: {exc}", frame=current)
+            return UIResult(error=str(exc), error_code=ACTION_FAILED, frame=current)
         return UIResult(did=action.action_id, frame=self.frame())
 
     def _scroll(self, action: Action) -> None:

@@ -51,6 +51,7 @@ class SelectorResolver:
         "class_name",
         "class",
         "parent_clickable",
+        "ancestor",
         "region",
     }
 
@@ -75,12 +76,29 @@ class SelectorResolver:
     ) -> list[UINode]:
         if not isinstance(selector, Mapping) or not selector:
             raise UnsupportedSelector("Selector must be a non-empty object")
-        unknown = set(selector) - self._supported
+        self._validate(selector)
+        resolved = {key: self._value(value, params) for key, value in selector.items()}
+        return [node for node in tree.nodes() if self._matches(node, resolved)]
+
+    @classmethod
+    def _validate(cls, selector: Mapping[str, Any]) -> None:
+        unknown = set(selector) - cls._supported
         if unknown:
             fields = ", ".join(sorted(str(value) for value in unknown))
             raise UnsupportedSelector(f"Unsupported selector fields: {fields}")
-        resolved = {key: self._value(value, params) for key, value in selector.items()}
-        return [node for node in tree.nodes() if self._matches(node, resolved)]
+        if "ancestor" in selector:
+            ancestor = selector["ancestor"]
+            if not isinstance(ancestor, Mapping) or not ancestor:
+                raise UnsupportedSelector("ancestor must contain a non-empty selector object")
+            cls._validate(ancestor)
+        if "region" in selector:
+            region = selector["region"]
+            if not isinstance(region, Mapping) or set(region) != {"left", "top", "right", "bottom"}:
+                raise UnsupportedSelector("region must contain left/top/right/bottom")
+            try:
+                [int(region[key]) for key in ("left", "top", "right", "bottom")]
+            except (TypeError, ValueError):
+                raise UnsupportedSelector("region coordinates must be integers") from None
 
     @staticmethod
     def _value(value: Any, params: Mapping[str, Any] | None) -> Any:
@@ -109,10 +127,17 @@ class SelectorResolver:
                 return False
             if key in {"class_name", "class"} and node.class_name != str(expected):
                 return False
-            if key == "parent_clickable" and bool(expected) and not any(
-                ancestor.clickable or ancestor.long_clickable for ancestor in node.ancestors()
-            ):
-                return False
+            if key == "parent_clickable":
+                has_clickable_parent = any(
+                    ancestor.clickable or ancestor.long_clickable for ancestor in node.ancestors()
+                )
+                if bool(expected) != has_clickable_parent:
+                    return False
+            if key == "ancestor":
+                if not isinstance(expected, Mapping):
+                    raise UnsupportedSelector("ancestor must contain a selector object")
+                if not any(self._matches(ancestor, expected) for ancestor in node.ancestors()):
+                    return False
             if key == "region" and not self._in_region(node.bounds, expected):
                 return False
         return True

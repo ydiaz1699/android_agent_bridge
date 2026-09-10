@@ -33,7 +33,7 @@ class KnowledgePack:
 
     @property
     def action_specs(self) -> dict[str, KnowledgeActionSpec]:
-        return compile_actions(self.actions)
+        return compile_actions(self.actions, selectors=self.selectors)
 
     def matches_screen(self, tree: UITree) -> str:
         """Return the first state whose declarative indicators match the tree."""
