@@ -69,7 +69,11 @@ class KnowledgeActionSpec:
         raise InvalidKnowledgeAction(f"Action has no strategies: {self.identifier}")
 
 
-def compile_actions(raw: dict[str, Any]) -> dict[str, KnowledgeActionSpec]:
+def compile_actions(
+    raw: dict[str, Any],
+    *,
+    selectors: dict[str, Any] | None = None,
+) -> dict[str, KnowledgeActionSpec]:
     """Validate pack actions and return typed specs.
 
     Only semantic intents are accepted. Shell commands, coordinates and
@@ -97,13 +101,15 @@ def compile_actions(raw: dict[str, Any]) -> dict[str, KnowledgeActionSpec]:
         for strategy in strategies:
             if not isinstance(strategy, dict):
                 raise InvalidKnowledgeAction(f"Strategy must be an object: {identifier}")
-            # SelectorResolver performs the definitive field validation. Run it
-            # against an empty tree only for schema field validation below.
-            unknown = set(strategy) - SelectorResolver._supported
-            if unknown:
-                fields = ", ".join(sorted(str(value) for value in unknown))
-                raise InvalidKnowledgeAction(f"Unsupported strategy fields in {identifier}: {fields}")
-            normalized.append(dict(strategy))
+            expanded = _expand_strategy(strategy, selectors or {}, identifier)
+            for expanded_strategy in expanded:
+                unknown = set(expanded_strategy) - SelectorResolver._supported
+                if unknown:
+                    fields = ", ".join(sorted(str(value) for value in unknown))
+                    raise InvalidKnowledgeAction(
+                        f"Unsupported strategy fields in {identifier}: {fields}"
+                    )
+                normalized.append(expanded_strategy)
         compiled[identifier] = KnowledgeActionSpec(
             identifier=identifier,
             from_screen=from_screen,
@@ -111,3 +117,30 @@ def compile_actions(raw: dict[str, Any]) -> dict[str, KnowledgeActionSpec]:
             strategies=tuple(normalized),
         )
     return compiled
+
+
+
+def _expand_strategy(
+    strategy: dict[str, Any],
+    selectors: dict[str, Any],
+    identifier: str,
+) -> list[dict[str, Any]]:
+    """Expand an optional ``selector: screen.name`` reference."""
+    selector_name = strategy.get("selector")
+    if selector_name is None:
+        return [dict(strategy)]
+    if not isinstance(selector_name, str) or selector_name.count(".") != 1:
+        raise InvalidKnowledgeAction(f"Invalid selector reference in {identifier}")
+    screen, name = selector_name.split(".", 1)
+    definitions = selectors.get(screen, {}).get(name)
+    if not isinstance(definitions, list) or not definitions:
+        raise InvalidKnowledgeAction(
+            f"Unknown selector reference in {identifier}: {selector_name}"
+        )
+    overrides = {key: value for key, value in strategy.items() if key != "selector"}
+    expanded: list[dict[str, Any]] = []
+    for definition in definitions:
+        if not isinstance(definition, dict):
+            raise InvalidKnowledgeAction(f"Selector definition must be an object: {selector_name}")
+        expanded.append({**definition, **overrides})
+    return expanded

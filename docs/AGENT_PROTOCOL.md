@@ -37,8 +37,10 @@ Cada acción debe producir una nueva lectura o un error estructurado:
 ```
 
 ```json
-{"error":"no action #9","frame":{...}}
+{"error":"no action #9","error_code":"action_not_found","frame":{...}}
 ```
+
+Los errores de sesión usan códigos estables, entre ellos `action_not_found`, `input_required`, `pagination_end`, `state_mismatch`, `selector_not_found` y `action_failed`.
 
 ## Seguridad del contexto
 
