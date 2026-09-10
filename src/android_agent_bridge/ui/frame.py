@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -16,6 +17,7 @@ class Action:
     label: str
     kind: str
     node: UINode | None = field(default=None, repr=False)
+    action_id: str | None = None
 
     def prompt(self) -> str:
         return f"{self.number} {self.label}"
@@ -55,16 +57,25 @@ class FrameBuilder:
         self.page_size = page_size
         self.read_cap = read_cap
 
-    def build(self, tree: UITree, *, app: str = "unknown", screen: str = "unknown", page: int = 1) -> Frame:
+    def build(
+        self,
+        tree: UITree,
+        *,
+        app: str = "unknown",
+        screen: str = "unknown",
+        page: int = 1,
+        knowledge_actions: Sequence[Action] = (),
+    ) -> Frame:
         inputs: list[UINode] = []
         controls: list[UINode] = []
         opens: list[UINode] = []
         readable: list[str] = []
-        scrollable = False
+        scroll_node: UINode | None = None
 
         for node in tree.nodes():
             label = node.label
-            scrollable = scrollable or node.scrollable
+            if node.scrollable and scroll_node is None:
+                scroll_node = node
             if node.editable:
                 inputs.append(node)
                 continue
@@ -92,31 +103,55 @@ class FrameBuilder:
         if submit is not None and inputs:
             actions.append(Action(0, "send", "send", "submit", submit))
 
-        if scrollable:
-            actions.extend((Action(0, "up", "up", "nav"), Action(0, "down", "down", "nav")))
+        if scroll_node is not None:
+            actions.extend(
+                (
+                    Action(0, "up", "up", "nav"),
+                    Action(0, "down", "down", "nav"),
+                    Action(0, "left", "left", "nav"),
+                    Action(0, "right", "right", "nav"),
+                    Action(0, "scroll_up", "scroll_up", "scroll", scroll_node),
+                    Action(0, "scroll_down", "scroll_down", "scroll", scroll_node),
+                )
+            )
         actions.extend((Action(0, "back", "back", "nav"), Action(0, "home", "home", "nav")))
+        actions.extend(knowledge_actions)
 
+        knowledge_labels = {
+            action.node.label.casefold()
+            for action in knowledge_actions
+            if action.node is not None and action.node.label
+        }
         seen: set[str] = set()
         unique_opens: list[UINode] = []
         open_candidates = [node for node in controls if node is not submit]
         open_candidates.extend(opens)
         for node in open_candidates:
             key = node.label.casefold()
-            if key and key not in seen:
+            if key and key not in knowledge_labels and key not in seen:
                 seen.add(key)
                 unique_opens.append(node)
 
         total_pages = max(1, (len(unique_opens) + self.page_size - 1) // self.page_size)
         page = min(max(1, page), total_pages)
-        start = (page - 1) * self.page_size
-        for node in unique_opens[start : start + self.page_size]:
-            actions.append(Action(0, "open", f"open: {node.label[:48]}", "open", node))
-
-        if page < total_pages:
-            actions.append(Action(0, "more", f"more  ({len(unique_opens) - start - self.page_size} more)", "more"))
+        visible_count = min(page * self.page_size, len(unique_opens))
+        first_batch = unique_opens[: self.page_size]
+        newly_revealed = unique_opens[self.page_size : visible_count]
+        actions.extend(
+            Action(0, "open", f"open: {node.label[:48]}", "open", node)
+            for node in first_batch
+        )
+        if total_pages > 1:
+            actions.append(
+                Action(0, "more", f"more  (page {page + 1}/{total_pages})", "more")
+            )
+        actions.extend(
+            Action(0, "open", f"open: {node.label[:48]}", "open", node)
+            for node in newly_revealed
+        )
 
         numbered = [
-            Action(index, action.verb, action.label, action.kind, action.node)
+            Action(index, action.verb, action.label, action.kind, action.node, action.action_id)
             for index, action in enumerate(actions, start=1)
         ]
         clean_read = []

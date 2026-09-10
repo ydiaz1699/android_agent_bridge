@@ -8,6 +8,9 @@ from pathlib import Path
 from typing import Any
 
 from android_agent_bridge.ui.parser import UITree
+from android_agent_bridge.ui.selectors import SelectorError, SelectorResolver
+
+from .actions import KnowledgeActionSpec, compile_actions
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,13 +31,22 @@ class KnowledgePack:
     def package_names(self) -> list[str]:
         return [str(value) for value in self.manifest.get("package_names", [])]
 
+    @property
+    def action_specs(self) -> dict[str, KnowledgeActionSpec]:
+        return compile_actions(self.actions)
+
     def matches_screen(self, tree: UITree) -> str:
         """Return the first state whose declarative indicators match the tree."""
-        nodes = tree.nodes()
+        resolver = SelectorResolver()
         for state_name, definition in self.states.items():
             indicators = definition.get("indicators", [])
-            if all(_selector_matches(nodes, indicator) for indicator in indicators):
-                return state_name
+            if not indicators:
+                continue
+            try:
+                if all(resolver.resolve(tree, indicator) for indicator in indicators):
+                    return state_name
+            except SelectorError:
+                continue
         return "unknown"
 
 
@@ -84,15 +96,3 @@ def _read_json(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise TypeError(f"Knowledge file must contain an object: {path}")
     return value
-
-
-def _selector_matches(nodes, selector: dict[str, Any]) -> bool:
-    for node in nodes:
-        if "resource_id" in selector and node.resource_id != selector["resource_id"]:
-            continue
-        if "text" in selector and node.text != selector["text"]:
-            continue
-        if "content_desc" in selector and node.content_desc != selector["content_desc"]:
-            continue
-        return True
-    return False
