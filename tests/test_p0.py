@@ -200,27 +200,29 @@ def test_mgandroid_channels_fixture_covers_panel_category_channel_number_and_epg
     assert panel.bounds is not None
     assert resolver.resolve(
         tree,
-        {"resource_id": "channel_category", "text": "Deportes"},
+        {"resource_id": "tv_live_name", "text": "Deportes", "ancestor": {"resource_id": "ll_channel_root"}},
     ).text == "Deportes"
 
     number = resolver.resolve(
         tree,
-        {"resource_id": "channel_number", "text": "102", "ancestor": {"resource_id": "channel_row"}},
+        {"resource_id": "tv_live_pos", "text": "102", "ancestor": {"resource_id": "ll_root"}},
     )
     assert number.text == "102"
 
     channel = resolver.resolve(
         tree,
         {
-            "resource_id": "channel_name",
+            "resource_id": "tv_live_name",
             "text_contains": "FOX",
-            "ancestor": {"resource_id": "channel_row", "class_name": "android.widget.LinearLayout"},
+            "ancestor": {"resource_id": "ll_root", "class_name": "android.widget.LinearLayout"},
         },
     )
-    assert channel.resource_id == "channel_name"
+    assert channel.resource_id == "tv_live_name"
     assert channel.tap_bounds() is not None
+    selected = pack.action_specs["select_channel"].resolve(tree, params={"channel": "FOX"})
+    assert selected.text == "FOX Sports"
 
-    epg = resolver.resolve(tree, {"resource_id": "program_view", "text_contains": "Fútbol"})
+    epg = resolver.resolve(tree, {"resource_id": "tv_live_epg", "text_contains": "Fútbol"})
     assert epg.text == "13:00 Fútbol en vivo"
     assert pack.matches_screen(tree) == "live"
 
@@ -264,14 +266,14 @@ def test_named_pack_selectors_support_region_and_ancestor_boundaries() -> None:
     tree = parse_ui_xml(xml)
     resolver = SelectorResolver()
 
-    panel = resolver.resolve(tree, {"resource_id": "channel_panel", "region": {"left": 0, "top": 100, "right": 900, "bottom": 1080}})
-    assert panel.resource_id == "channel_panel"
+    panel = resolver.resolve(tree, {"resource_id": "recycler_channel", "region": {"left": 0, "top": 100, "right": 900, "bottom": 1080}})
+    assert panel.resource_id.endswith("/recycler_channel")
     channel = resolver.resolve(
         tree,
         {
-            "resource_id": "channel_name",
+            "resource_id": "tv_live_name",
             "text": "ESPN HD",
-            "ancestor": {"resource_id": "channel_row", "class_name": "android.widget.LinearLayout"},
+            "ancestor": {"resource_id": "ll_root", "class_name": "android.widget.LinearLayout"},
         },
     )
     assert channel.text == "ESPN HD"

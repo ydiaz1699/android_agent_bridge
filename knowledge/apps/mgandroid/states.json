@@ -6,7 +6,7 @@
   },
   "input": {
     "indicators": [
-      {"resource_id": "search_input"}
+      {"resource_id": "edit_search"}
     ]
   },
   "live": {
