@@ -1,0 +1,34 @@
+{
+  "open_live": {
+    "from": "home",
+    "intent": "navigate",
+    "strategies": [
+      {"resource_id": "vod_category_name", "text": "VIVO"},
+      {"text": "VIVO"}
+    ]
+  },
+  "open_movies": {
+    "from": "home",
+    "intent": "navigate",
+    "strategies": [
+      {"resource_id": "vod_category_name", "text": "PELÍCULA"},
+      {"text": "PELÍCULA"}
+    ]
+  },
+  "open_series": {
+    "from": "home",
+    "intent": "navigate",
+    "strategies": [
+      {"resource_id": "vod_category_name", "text": "SERIE"},
+      {"text": "SERIE"}
+    ]
+  },
+  "select_channel": {
+    "from": "live",
+    "intent": "select_by_name",
+    "strategies": [
+      {"resource_id": "channel_name"},
+      {"text_contains": "$channel"}
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "android-agent-bridge"
+version = "0.1.0"
+description = "Agent-first bridge for Android devices over ADB"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "ydiaz1699" }]
+keywords = ["android", "adb", "android-tv", "agent", "llm", "uiautomator"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: MIT License",
+]
+dependencies = []
+
+[project.optional-dependencies]
+rest = ["fastapi>=0.110", "uvicorn[standard]>=0.29"]
+vision = ["numpy>=1.24", "opencv-python-headless>=4.9"]
+dev = ["pytest>=8.0", "ruff>=0.8"]
+
+[project.scripts]
+android-agent = "android_agent_bridge.adapters.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/android_agent_bridge"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

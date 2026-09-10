@@ -1,0 +1,15 @@
+{
+  "home": {
+    "indicators": [
+      {"resource_id": "iv_logo"}
+    ]
+  },
+  "live": {
+    "indicators": [
+      {"resource_id": "tv_live_title"}
+    ]
+  },
+  "unknown": {
+    "indicators": []
+  }
+}

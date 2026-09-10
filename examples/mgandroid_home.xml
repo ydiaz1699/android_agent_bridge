@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<hierarchy rotation="0">
+  <node index="0" text="" resource-id="" class="android.widget.FrameLayout" package="com.android.mgandroid" content-desc="" clickable="false" enabled="true" bounds="[0,0][1920,1080]">
+    <node index="0" text="" resource-id="iv_logo" class="android.widget.ImageView" package="com.android.mgandroid" content-desc="" clickable="false" enabled="true" bounds="[40,30][220,120]" />
+    <node index="1" text="" resource-id="category_container" class="android.widget.LinearLayout" package="com.android.mgandroid" content-desc="" clickable="true" enabled="true" bounds="[200,300][520,460]">
+      <node index="0" text="PELÍCULA" resource-id="vod_category_name" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="false" enabled="true" bounds="[230,340][490,410]" />
+    </node>
+    <node index="2" text="VIVO" resource-id="vod_category_name" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="true" enabled="true" bounds="[560,300][880,460]" />
+    <node index="3" text="SERIE" resource-id="vod_category_name" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="true" enabled="true" bounds="[920,300][1240,460]" />
+    <node index="4" text="" resource-id="iv_setting" class="android.widget.ImageButton" content-desc="Ajustes" clickable="true" enabled="true" bounds="[1780,30][1870,120]" />
+  </node>
+</hierarchy>

@@ -1,0 +1,13 @@
+{
+  "home": {
+    "logo": [{"resource_id": "iv_logo"}],
+    "category": [{"resource_id": "vod_category_name"}],
+    "settings": [{"resource_id": "iv_setting"}],
+    "history": [{"resource_id": "history_btn"}],
+    "favorites": [{"resource_id": "fav_btn"}]
+  },
+  "live": {
+    "current_channel": [{"resource_id": "tv_live_title"}],
+    "speed": [{"resource_id": "tv_main_speed"}]
+  }
+}

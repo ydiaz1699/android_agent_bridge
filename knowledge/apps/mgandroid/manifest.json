@@ -1,0 +1,9 @@
+{
+  "id": "mgandroid",
+  "version": "0.1.0",
+  "package_names": ["com.android.mgandroid"],
+  "aliases": ["mg android", "mgandroid", "tv box"],
+  "supported_device_types": ["android_tv", "android_tv_box"],
+  "capabilities": ["live_tv", "movies", "series", "anime", "channels", "favorites", "history"],
+  "notes": "Declarative knowledge only; device coordinates and user data are never stored here."
+}
