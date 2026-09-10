@@ -86,7 +86,7 @@ Esta matriz convierte la comparación narrativa en hallazgos identificables. Cad
 | PT-DIAG-01 | `diagnostics/{system,network,apps,report}.py` | Memoria, storage, uptime, red, procesos, apps y reportes | NUEVO | Alta para soporte | `diagnostics/` | Parcial: doctor solo es mínimo | Quick doctor y full report son consultas separadas, sanitizadas y bajo demanda |
 | PT-FILE-01 | `BaseTV.screen_record()` y ADB `pull/push` | Grabación y artefactos de diagnóstico | NUEVO | Media/alta | `diagnostics/` y adapter aprobado | Falta | Paths, duración, tamaño y retención están limitados; la grabación no bloquea MCP indefinidamente |
 | PT-HA-01 | `custom_components/pyt_androidtv/` | Entidades, ConfigFlow, servicios, cámara y Mushroom | FUERA_DE_ALCANCE | Baja para core | Adapter HA futuro | No portar | No existen entidades HA dentro del núcleo ni un segundo cliente ADB |
-| FA-SEL-01 | `Flujo_android/selector.py` | Texto, regex, ID parcial, clase, región, jerarquía y predicados | MEJORA / NUEVO | Crítica | `ui/` y `knowledge/` | Parcial: matching básico | Un selector declarativo devuelve un nodo actual, respeta prioridad y explica `selector_not_found` sin exponer XML al LLM |
+| FA-SEL-01 | `Flujo_android/selector.py` | Texto, regex, ID parcial, clase, región, jerarquía y predicados | MEJORA / NUEVO | Crítica | `ui/` y `knowledge/` | Implementado para los criterios P0 | Un selector declarativo devuelve un nodo actual, respeta prioridad y explica `selector_not_found` sin exponer XML al LLM |
 | FA-MG-01 | `Flujo_android/app.py`, `mgandroid.py` | Open, close, restart, wait-ready y ensure-home | NUEVO | Alta | workflow/policy MGAndroid | Falta | Cada transición tiene timeout, indicadores y frame posterior; recovery no depende solo de `sleep()` |
 | FA-MG-02 | `Flujo_android/mgandroid.py` | Live, movies, series, anime, special, settings, history y favorites | NUEVO | Alta | `knowledge/apps/mgandroid/`, `workflows/` | Parcial: acciones declaradas no ejecutables | Cada workflow verifica estado de origen, usa selector fresco y verifica destino |
 | FA-CHANNEL-01 | `Flujo_android/channel_extractor.py` | Panel, categorías, canales, EPG, favoritos, selección y deduplicación | NUEVO | Crítica para MGAndroid | pack y workflows | Falta | Se extraen canales por contenedor/ID/jerarquía, sin umbral fijo `left > 300`, y se devuelve evidencia sanitizada |
@@ -100,12 +100,12 @@ Esta matriz convierte la comparación narrativa en hallazgos identificables. Cad
 | MV-SYSTEM-01 | `movicom` system lane | App store, intents, URLs, web, contactos, notificaciones y cámara | NUEVO | Media/alta, con aprobación | adapters/system | Falta | Cada tool tiene allowlist, esquema, redacción de datos y aprobación para instalar, contactar, publicar o enviar |
 | MV-WORKFLOW-01 | `movicom` workflows | Workflows persistentes ejecutables | NUEVO | Alta | `workflows/` | Solo existe el modelo | Runner reutiliza una `UISession`, reevalúa cada paso y detiene la secuencia ante cambio de estado |
 | MV-INPUT-01 | `movicom` y `pyt-androidtv` input helpers | Limpieza, teclado, submit, ENTER, escaping y focus | MEJORA | Alta | `adb/transport.py`, `ui/session.py` | Parcial | Fixtures cubren espacios, backslash, comillas, `$`, backticks, pérdida de foco y fallback ENTER |
-| MV-PAGE-01 | `movicom` + `docs/AGENT_PROTOCOL.md` | Paginación acumulativa frente a ventana renumerada | CONTRADICTORIO | Crítica | `ui/frame.py`, `docs/AGENT_PROTOCOL.md` | Contrato inconsistente | Se elige una semántica, se documentan IDs/números válidos y existen pruebas para `more` |
+| MV-PAGE-01 | `movicom` + `docs/AGENT_PROTOCOL.md` | Paginación acumulativa frente a ventana renumerada | CONTRADICTORIO | Crítica | `ui/frame.py`, `docs/AGENT_PROTOCOL.md` | Resuelto | Se elige una semántica, se documentan IDs/números válidos y existen pruebas para `more` |
 | MV-SAFE-01 | `movicom` y `AGENTS.md` | Aprobación de acciones sensibles | MEJORA / NUEVO | Crítica | adapters/policies | Parcial: solo está documentado | Tools sensibles devuelven `approval_required` antes de ejecutar y no imprimen datos privados |
-| BR-APP-01 | `devices/android.py` | Regex de `list_apps()` y `resolve_package()` | MEJORA / DEFECTO PROBABLE | Crítica | `devices/android.py` | Pendiente de verificar | Fixtures de `adb devices` y `query-activities` resuelven package completo, alias y varios seriales |
-| BR-KNOW-01 | `knowledge/registry.py`, `ui/session.py` | `selectors.json` y `actions.json` no se ejecutan | CONTRADICTORIO | Crítica | `knowledge/`, `ui/session.py` | Inerte | Una acción de pack se compila/resuelve y devuelve `UIResult` con frame posterior |
-| BR-KNOW-02 | pack MGAndroid y `tvbox-controller/ids.yaml` | IDs completos versus abreviados y `channel_name` versus `tv_live_name` | CONTRADICTORIO / NO_DECIDIBLE | Crítica | pack MGAndroid | No validado con dump real | Se define formato canónico y fixtures prueban IDs reales y alias documentados |
-| BR-UI-01 | `ui/session.py` | `up/down` implementados como swipe fijo | CONTRADICTORIO | Alta | `ui/session.py`, `devices/` | Pendiente | DPAD y scroll tienen verbos distintos y viewport configurable |
+| BR-APP-01 | `devices/android.py` | Regex de `list_apps()` y `resolve_package()` | MEJORA / DEFECTO PROBABLE | Crítica | `devices/android.py` | Verificado con `FakeADBTransport` | Fixtures de `adb devices` y `query-activities` resuelven package completo, alias y varios seriales |
+| BR-KNOW-01 | `knowledge/registry.py`, `ui/session.py` | `selectors.json` y `actions.json` no se ejecutan | CONTRADICTORIO | Crítica | `knowledge/`, `ui/session.py` | Implementado | Una acción de pack se compila/resuelve y devuelve `UIResult` con frame posterior |
+| BR-KNOW-02 | pack MGAndroid y `tvbox-controller/ids.yaml` | IDs completos versus abreviados y `channel_name` versus `tv_live_name` | MEJORA / NO_DECIDIBLE | Crítica | pack MGAndroid | Consolidación estática completada; runtime pendiente | Selectores canónicos usan `tv_live_*` de la evidencia fuente, aceptan sufijos y conservan alias sintéticos solo como fallback; el dump real queda para validar runtime |
+| BR-UI-01 | `ui/session.py` | `up/down` implementados como swipe fijo | CONTRADICTORIO | Alta | `ui/session.py`, `devices/` | Corregido | DPAD y scroll tienen verbos distintos y viewport configurable |
 | BR-ERR-01 | adapters y `ADBError` | Errores mezclan `RuntimeError`, `ValueError` y strings | MEJORA | Alta | `exceptions.py`, adapters | Parcial | MCP/REST serializan códigos estables: `device_unavailable`, `adb_timeout`, `selector_not_found`, etc. |
 | BR-RT-01 | MCP runtime y `UISession` | Sin reconnect/wakeup/selección obligatoria | NUEVO | Alta | runtime/transport | Falta | Dispositivo perdido produce estado recuperable, reintento limitado y serial explícito |
 
@@ -545,25 +545,11 @@ Cada workflow debe verificar pantalla de origen, actuar sobre un frame fresco y 
 
 ### 6.3 IDs de MGAndroid
 
-`tvbox-controller/ids.yaml` contiene IDs completos como:
+`tvbox-controller/ids.yaml` y `Flujo_android/channel_extractor.py` coinciden en la evidencia estática: el panel de canales usa `recycler_channel`/`ll_root`, el número `tv_live_pos`, el nombre `tv_live_name` y el EPG `tv_live_epg`; el menú lateral usa `ll_channel_root` con nombres `tv_live_name`. La discrepancia no era entre dos IDs reales equivalentes: `channel_name`, `channel_number` y `program_view` eran nombres sintéticos de los primeros fixtures.
 
-```text
-com.android.mgandroid:id/iv_logo
-```
+**Decisión canónica:** el pack prioriza los IDs fuente completos o sus sufijos (`tv_live_name`, `tv_live_pos`, `tv_live_epg`, `ll_root`, `recycler_channel`, `ll_channel_root`) y conserva los nombres sintéticos únicamente como estrategias de fallback para fixtures o variantes no confirmadas. El fixture `mgandroid_channels.xml` ahora usa los IDs fuente, incluyendo una mezcla de IDs completos y sufijos para probar la normalización explícita.
 
-El pack del bridge contiene formas abreviadas como:
-
-```text
-iv_logo
-```
-
-El parser conserva el resource ID tal como viene en el XML y la comparación actual puede ser exacta. Por tanto, el pack puede no reconocer dumps reales.
-
-**Clasificación:** `CONTRADICTORIO` / `NUEVO` como corrección requerida.
-
-**Decisión:** definir una normalización explícita en el límite del knowledge pack o almacenar IDs completos validados. No alterar globalmente el parser para ocultar diferencias de procedencia.
-
-También debe corregirse la discrepancia entre `tv_live_name` del legado y el selector `channel_name`/equivalente usado por el pack actual, validándolo contra dumps reales.
+El pack no declara que `tv_live_name` esté validado en runtime: esa afirmación requiere un dump real del APK. La compatibilidad estática queda consolidada; la comprobación en dispositivo sigue siendo `NO_DECIDIBLE`.
 
 ### 6.4 Motor de decisión
 
@@ -846,11 +832,10 @@ Esta rama completa la cobertura de fixtures y consolida el pack declarativo sin 
 - `UIResult` con códigos estables como `action_not_found`, `input_required`, `pagination_end` y `action_failed`;
 - DPAD separado de `scroll` con viewport efímero y paginación acumulativa con posición estable de `more`;
 - fixtures sanitizados de home, live, panel de canales, input y pantalla desconocida;
-- selectores MGAndroid respaldados por fixtures para panel, categoría, fila, canal, número, EPG, campos de entrada, password y submit;
-- reconocimiento explícito de botón submit con etiquetas comunes en español (`Buscar`, `Enviar`, `Aceptar`);
+- Consolidación estática del pack MGAndroid con los IDs fuente de `Flujo_android` y `tvbox-controller`: `tv_live_name`, `tv_live_pos`, `tv_live_epg`, `ll_root`, `recycler_channel` y `ll_channel_root` tienen prioridad; los IDs sintéticos de fixtures anteriores quedan como fallback explícito.
 - trece pruebas sin dispositivo mediante `FakeADBTransport` y los fixtures del directorio `examples/`.
 
-La discrepancia histórica `channel_name`/`tv_live_name` no se declara resuelta: los fixtures prueban `channel_name` y `tv_live_title`, pero hace falta un dump real del APK para decidir si `tv_live_name` es una variante válida o un identificador obsoleto. El gate AB-P0-09 queda cerrado en este incremento: 13 tests pasan, `compileall`, Ruff y `git diff --check` terminan correctamente.
+La discrepancia histórica `channel_name`/`tv_live_name` queda resuelta en la consolidación estática: la evidencia de `Flujo_android` y `tvbox-controller` respalda `tv_live_name` como nombre real de canal, mientras `channel_name` se conserva solo como fallback sintético. La validación de runtime del APK sigue siendo una tarea `NO_DECIDIBLE` hasta disponer de un dump real. El gate AB-P0-09 queda cerrado en este incremento: 13 tests pasan, `compileall`, Ruff y `git diff --check` terminan correctamente.
 
 ### Secuencia de ejecución
 
@@ -887,7 +872,7 @@ AB-P2-01..AB-P2-08 discovery, diagnóstico, percepción y adapters
 | AB-P0-04 | Implementar selector declarativo ordenado | `Flujo_android/selector.py`, `selectors.json` | `ui/selectors.py`, `knowledge/registry.py`, tests | AB-P0-03 | Soporta ID exacto/parcial, texto exacto/contiene, regex, content-desc, clase, región, jerarquía y padre clickeable; devuelve nodo o error estable | COMPLETADA |
 | AB-P0-05 | Compilar acciones del knowledge pack | `actions.json`, `tvbox-controller/actions.py` | `knowledge/`, `workflows/model.py`, tests | AB-P0-04 | `actions.json` se valida, tiene schema estable, resuelve selector y no permite shell/coordenadas persistentes | COMPLETADA |
 | AB-P0-06 | Conectar actions con `UISession` | `UISession.do()`, contrato `read → do → read` | `ui/session.py`, `ui/frame.py`, tests | AB-P0-05 | Una acción declarativa se ejecuta contra dump fresco, devuelve `UIResult` y frame posterior; fallos no dejan estado ambiguo | COMPLETADA |
-| AB-P0-07 | Consolidar pack MGAndroid y corregir nombres | `Flujo_android/mgandroid.py`, `tvbox-controller/ids.yaml`, pack actual | `knowledge/apps/mgandroid/*.json`, fixtures y docs | AB-P0-03, AB-P0-06 | Manifest, estados, selectores y acciones solo declaran capacidades respaldadas; `channel_name` se prueba con fixtures y `tv_live_name` queda explícitamente pendiente de dump real | EN_PROGRESO |
+| AB-P0-07 | Consolidar pack MGAndroid y corregir nombres | `Flujo_android/mgandroid.py`, `tvbox-controller/ids.yaml`, pack actual | `knowledge/apps/mgandroid/*.json`, fixtures y docs | AB-P0-03, AB-P0-06 | Manifest, estados, selectores y acciones solo declaran capacidades respaldadas; priorizan `tv_live_name`/`tv_live_pos`/`tv_live_epg` con fallback sintético explícito; runtime del APK queda documentado como pendiente | COMPLETADA |
 | AB-P0-08 | Resolver contrato de paginación y navegación TV | `movicom`, `docs/AGENT_PROTOCOL.md`, `UISession` | `ui/frame.py`, `ui/session.py`, `docs/AGENT_PROTOCOL.md`, tests | AB-P0-01 | `more` tiene semántica única; números/IDs válidos están documentados; DPAD no usa swipe fijo y `scroll` es separado | COMPLETADA |
 | AB-P0-09 | Crear gate de regresión del núcleo | CI de `pyt-androidtv`, ejemplos del bridge | `tests/`, workflow CI si existe | AB-P0-02..AB-P0-08 | Parser, selector, frame, pack, executor, paginación, DPAD y errores pasan con `compileall`, Ruff y tests reproducibles | COMPLETADA |
 
