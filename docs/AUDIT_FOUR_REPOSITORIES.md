@@ -67,6 +67,48 @@ MCP / REST / CLI / Home Assistant adapters
                     ADBTransport
 ```
 
+## 3.1 Matriz detallada de trazabilidad
+
+Esta matriz convierte la comparación narrativa en hallazgos identificables. Cada fila tiene una fuente, una decisión de clasificación, un destino y un criterio observable para considerar la integración terminada. `Estado` describe el bridge en el momento de la auditoría; no significa que el hallazgo ya esté implementado.
+
+| ID | Fuente | Capacidad o hallazgo | Clasificación | Relevancia | Destino | Estado actual | Criterio de aceptación |
+|---|---|---|---|---|---|---|---|
+| PT-ADB-01 | `pyt-androidtv/src/pyt_androidtv/adb/{base,tcp,server}.py` | ADB TCP, servidor ADB, auth RSA, timeouts, conexión y errores | NUEVO / MEJORA | Alta | `adb/transport.py` y backends | Parcial | Un único contrato permite subprocess, TCP y server con timeouts y errores estructurados; los adapters no crean clientes secundarios |
+| PT-ADB-02 | `pyt-androidtv/src/pyt_androidtv/adb/{base,tcp,server}.py` | `pull`, `push` y `screencap` | NUEVO | Alta para diagnóstico | `adb/transport.py` | Falta | Fixtures o fake transport prueban transferencia y captura con paths validados y límites de tamaño |
+| PT-DEV-01 | `models.py`, `BaseTV.get_device_properties()` | Fabricante, modelo, serial, Android, product ID y MAC | NUEVO | Alta para doctor | `devices/`, `diagnostics/` | Falta | `android_doctor` devuelve un snapshot sanitizado y no lo mezcla con el frame UI |
+| PT-DEV-02 | `BaseTV.get_screen_resolution()`, `get_screen_density()` | Resolución y densidad | NUEVO | Media/alta para adaptación | `devices/` | Falta | El viewport puede consultarse bajo demanda y los swipes no dependen de 540/1080 fijo |
+| PT-STATE-01 | `BaseTV.screen_on()`, `awake()`, `wake_lock_size()` | Estado físico de pantalla, wake y wake lock | NUEVO | Alta para recovery | `devices/`, `diagnostics/` | Falta | Se distingue `screen_on`, `awake` e indeterminado con errores tipados |
+| PT-STATE-02 | `current_app_media_session_state()`, `audio_state()`, `get_hdmi_input()` | Estado multimedia, audio y HDMI | NUEVO | Alta para TV | `devices/`, `diagnostics/` | Falta | Una consulta explícita devuelve estado multimedia sin alterar `Frame.screen` |
+| PT-TV-01 | `BaseTV.stream_music_properties()`, `set_volume_level()` | Lectura y ajuste normalizado de volumen, mute y salida | NUEVO | Alta | `devices/` y tools controladas | Falta | Se valida rango `0.0–1.0`, dispositivo objetivo y resultado; mute no usa shell libre |
+| PT-TV-02 | `constants.py`, helpers de teclas y `turn_on/off/sleep()` | DPAD, media, power y sleep | NUEVO / VARIANTE | Alta | `devices/` con allowlist | Parcial: solo `keyevent` genérico | Verbos semánticos seguros generan los keyevents correctos y rechazan códigos no permitidos |
+| PT-WIRE-01 | `wireless/discovery.py` | Scan TCP/Zeroconf y candidatos ADB | NUEVO | Media/alta | `provisioning/` | Falta | Un candidato solo se acepta después de validar handshake ADB; el scan es explícito |
+| PT-WIRE-02 | `wireless/pairing.py` | Pairing, `adb tcpip`, conexión y reconnect | NUEVO | Media/alta | `provisioning/` | Falta | Pairing requiere aprobación, no imprime códigos y devuelve estado `paired` separado de `connected` |
+| PT-DIAG-01 | `diagnostics/{system,network,apps,report}.py` | Memoria, storage, uptime, red, procesos, apps y reportes | NUEVO | Alta para soporte | `diagnostics/` | Parcial: doctor solo es mínimo | Quick doctor y full report son consultas separadas, sanitizadas y bajo demanda |
+| PT-FILE-01 | `BaseTV.screen_record()` y ADB `pull/push` | Grabación y artefactos de diagnóstico | NUEVO | Media/alta | `diagnostics/` y adapter aprobado | Falta | Paths, duración, tamaño y retención están limitados; la grabación no bloquea MCP indefinidamente |
+| PT-HA-01 | `custom_components/pyt_androidtv/` | Entidades, ConfigFlow, servicios, cámara y Mushroom | FUERA_DE_ALCANCE | Baja para core | Adapter HA futuro | No portar | No existen entidades HA dentro del núcleo ni un segundo cliente ADB |
+| FA-SEL-01 | `Flujo_android/selector.py` | Texto, regex, ID parcial, clase, región, jerarquía y predicados | MEJORA / NUEVO | Crítica | `ui/` y `knowledge/` | Parcial: matching básico | Un selector declarativo devuelve un nodo actual, respeta prioridad y explica `selector_not_found` sin exponer XML al LLM |
+| FA-MG-01 | `Flujo_android/app.py`, `mgandroid.py` | Open, close, restart, wait-ready y ensure-home | NUEVO | Alta | workflow/policy MGAndroid | Falta | Cada transición tiene timeout, indicadores y frame posterior; recovery no depende solo de `sleep()` |
+| FA-MG-02 | `Flujo_android/mgandroid.py` | Live, movies, series, anime, special, settings, history y favorites | NUEVO | Alta | `knowledge/apps/mgandroid/`, `workflows/` | Parcial: acciones declaradas no ejecutables | Cada workflow verifica estado de origen, usa selector fresco y verifica destino |
+| FA-CHANNEL-01 | `Flujo_android/channel_extractor.py` | Panel, categorías, canales, EPG, favoritos, selección y deduplicación | NUEVO | Crítica para MGAndroid | pack y workflows | Falta | Se extraen canales por contenedor/ID/jerarquía, sin umbral fijo `left > 300`, y se devuelve evidencia sanitizada |
+| FA-CRAWL-01 | `Flujo_android/crawler.py`, `main.py` | Crawl, dumps, screenshots, exportación y CLI de diagnóstico | NUEVO / VARIANTE | Media | adapter de diagnóstico | Falta | El crawler produce evidencia candidata versionada; no modifica packs automáticamente ni entra en el ciclo normal |
+| FA-DPAD-01 | `Flujo_android/device.py`, `mgandroid.py` | Navegación DPAD para TV | MEJORA | Alta | `devices/`, `ui/session.py` | Incorrecto: `up/down` usan swipe | `up/down/left/right` usan `KEYCODE_DPAD_*`; `scroll` es una acción independiente |
+| TB-MG-01 | `tvbox-controller/mgandroid.py`, `actions.py`, `ids.yaml` | Navegación MGAndroid y estado de app | NUEVO / MEJORA | Alta | pack/workflows | Parcial y duplicado en formato YAML | Solo queda un knowledge pack canónico; la evidencia de `ids.yaml` se normaliza y se prueba |
+| TB-CHANNEL-01 | `tvbox-controller/mgandroid.py` | Panel, lista, canal actual, búsqueda y channel up/down | NUEVO | Crítica | workflows MGAndroid | Falta | El workflow abre panel solo si es necesario, selecciona por nombre y devuelve frame verificado |
+| TB-PERCEPT-01 | `ocr.py`, `vision.py`, `llm_vision.py`, `engine.py` | OCR/CV/LLM para candidatos visuales | NUEVO / VARIANTE | Media, opcional | providers de percepción | Falta | El proveedor devuelve candidato/confianza; el ejecutor valida frame fresco y nunca recibe shell/coordenadas persistentes |
+| TB-REST-01 | `tvbox-controller/app.py` | REST de control y `action` | VARIANTE / CONTRADICTORIO | Media | `adapters/rest.py` | REST bridge mínimo | Endpoints solo llaman capacidades existentes, tienen auth/configuración y errores HTTP estructurados |
+| TB-DEPLOY-01 | `Dockerfile`, `docker-compose.yml`, `requirements.txt` | Docker, healthcheck, red y dependencias pesadas | FUERA_DE_ALCANCE / VARIANTE | Media para despliegue | `deploy/` o docs | No existe en core | El despliegue es opcional, parametrizado y no mezcla OCR/CV con dependencias base |
+| MV-SYSTEM-01 | `movicom` system lane | App store, intents, URLs, web, contactos, notificaciones y cámara | NUEVO | Media/alta, con aprobación | adapters/system | Falta | Cada tool tiene allowlist, esquema, redacción de datos y aprobación para instalar, contactar, publicar o enviar |
+| MV-WORKFLOW-01 | `movicom` workflows | Workflows persistentes ejecutables | NUEVO | Alta | `workflows/` | Solo existe el modelo | Runner reutiliza una `UISession`, reevalúa cada paso y detiene la secuencia ante cambio de estado |
+| MV-INPUT-01 | `movicom` y `pyt-androidtv` input helpers | Limpieza, teclado, submit, ENTER, escaping y focus | MEJORA | Alta | `adb/transport.py`, `ui/session.py` | Parcial | Fixtures cubren espacios, backslash, comillas, `$`, backticks, pérdida de foco y fallback ENTER |
+| MV-PAGE-01 | `movicom` + `docs/AGENT_PROTOCOL.md` | Paginación acumulativa frente a ventana renumerada | CONTRADICTORIO | Crítica | `ui/frame.py`, `docs/AGENT_PROTOCOL.md` | Contrato inconsistente | Se elige una semántica, se documentan IDs/números válidos y existen pruebas para `more` |
+| MV-SAFE-01 | `movicom` y `AGENTS.md` | Aprobación de acciones sensibles | MEJORA / NUEVO | Crítica | adapters/policies | Parcial: solo está documentado | Tools sensibles devuelven `approval_required` antes de ejecutar y no imprimen datos privados |
+| BR-APP-01 | `devices/android.py` | Regex de `list_apps()` y `resolve_package()` | MEJORA / DEFECTO PROBABLE | Crítica | `devices/android.py` | Pendiente de verificar | Fixtures de `adb devices` y `query-activities` resuelven package completo, alias y varios seriales |
+| BR-KNOW-01 | `knowledge/registry.py`, `ui/session.py` | `selectors.json` y `actions.json` no se ejecutan | CONTRADICTORIO | Crítica | `knowledge/`, `ui/session.py` | Inerte | Una acción de pack se compila/resuelve y devuelve `UIResult` con frame posterior |
+| BR-KNOW-02 | pack MGAndroid y `tvbox-controller/ids.yaml` | IDs completos versus abreviados y `channel_name` versus `tv_live_name` | CONTRADICTORIO / NO_DECIDIBLE | Crítica | pack MGAndroid | No validado con dump real | Se define formato canónico y fixtures prueban IDs reales y alias documentados |
+| BR-UI-01 | `ui/session.py` | `up/down` implementados como swipe fijo | CONTRADICTORIO | Alta | `ui/session.py`, `devices/` | Pendiente | DPAD y scroll tienen verbos distintos y viewport configurable |
+| BR-ERR-01 | adapters y `ADBError` | Errores mezclan `RuntimeError`, `ValueError` y strings | MEJORA | Alta | `exceptions.py`, adapters | Parcial | MCP/REST serializan códigos estables: `device_unavailable`, `adb_timeout`, `selector_not_found`, etc. |
+| BR-RT-01 | MCP runtime y `UISession` | Sin reconnect/wakeup/selección obligatoria | NUEVO | Alta | runtime/transport | Falta | Dispositivo perdido produce estado recuperable, reintento limitado y serial explícito |
+
 ## 4. Auditoría de `pyt-androidtv`
 
 ### 4.1 ADB y transporte
@@ -810,6 +852,85 @@ Estas piezas pueden inspirar adapters o tests, pero no deben duplicar la arquite
 6. Contacts, notifications, web, intents y cámara.
 7. Adapter Home Assistant.
 8. Docker y n8n como despliegues/adapters.
+
+## 10.1 Backlog de implementación verificable
+
+Las prioridades anteriores se convierten aquí en tareas ejecutables. Cada tarea tiene una sola salida principal, dependencias explícitas y una condición de cierre verificable. Todas están `PENDIENTES`: la auditoría no implementa código.
+
+### Secuencia de ejecución
+
+```text
+AB-P0-01 fixtures y fake transport
+        ↓
+AB-P0-02 regex de apps ───────────────┐
+AB-P0-03 contrato de IDs ──────────────┤
+        ↓                             │
+AB-P0-04 selector engine ─────────────┤
+        ↓                             │
+AB-P0-05 compilador de actions ───────┤
+        ↓                             │
+AB-P0-06 executor read-act-read ──────┤
+        ↓                             │
+AB-P0-07 pack MGAndroid canónico ─────┤
+        ↓                             │
+AB-P0-08 paginación + DPAD ───────────┘
+        ↓
+AB-P0-09 gate de pruebas P0
+        ↓
+AB-P1-01..AB-P1-08 capacidades TV, workflows y REST seguro
+        ↓
+AB-P2-01..AB-P2-08 discovery, diagnóstico, percepción y adapters
+```
+
+### Tareas P0 — núcleo y conocimiento
+
+| ID | Tarea | Fuentes de procedencia | Archivos objetivo | Dependencias | Validación / definición de terminado | Estado |
+|---|---|---|---|---|---|---|
+| AB-P0-01 | Crear fixtures sanitizados y `FakeADBTransport` | `examples/mgandroid_home.xml`, dumps de `Flujo_android`, tests de `pyt-androidtv` | `tests/`, `examples/`, posible `tests/fakes.py` | Ninguna | Fixtures cubren home, live, panel de canales, input y pantalla desconocida; todas las pruebas pueden ejecutarse sin dispositivo | PENDIENTE |
+| AB-P0-02 | Corregir resolución de apps y validación de package | `AndroidDevice.list_apps()`, `resolve_package()`, salida ADB de `tvbox-controller` | `devices/android.py`, `tests/test_devices.py` | AB-P0-01 | Alias `mgandroid`, package completo y lista de launchables funcionan con fixtures; package inválido se rechaza | PENDIENTE |
+| AB-P0-03 | Definir normalización canónica de resource IDs | `tvbox-controller/ids.yaml`, XML de `Flujo_android`, pack actual | `knowledge/registry.py`, pack MGAndroid, `tests/test_knowledge.py` | AB-P0-01 | Se decide si el pack guarda IDs completos o sufijos; se prueban ambos solo mediante una función explícita y documentada | PENDIENTE |
+| AB-P0-04 | Implementar selector declarativo ordenado | `Flujo_android/selector.py`, `selectors.json` | `ui/selectors.py`, `knowledge/registry.py`, tests | AB-P0-03 | Soporta ID exacto/parcial, texto exacto/contiene, regex, content-desc, clase, región, jerarquía y padre clickeable; devuelve nodo o error estable | PENDIENTE |
+| AB-P0-05 | Compilar acciones del knowledge pack | `actions.json`, `tvbox-controller/actions.py` | `knowledge/`, `workflows/model.py`, tests | AB-P0-04 | `actions.json` se valida, tiene schema estable, resuelve selector y no permite shell/coordenadas persistentes | PENDIENTE |
+| AB-P0-06 | Conectar actions con `UISession` | `UISession.do()`, contrato `read → do → read` | `ui/session.py`, `ui/frame.py`, tests | AB-P0-05 | Una acción declarativa se ejecuta contra dump fresco, devuelve `UIResult` y frame posterior; fallos no dejan estado ambiguo | PENDIENTE |
+| AB-P0-07 | Consolidar pack MGAndroid y corregir nombres | `Flujo_android/mgandroid.py`, `tvbox-controller/ids.yaml`, pack actual | `knowledge/apps/mgandroid/*.json`, fixtures y docs | AB-P0-03, AB-P0-06 | Manifest, estados, selectores y acciones solo declaran capacidades respaldadas; `channel_name`/`tv_live_name` queda resuelto con evidencia | PENDIENTE |
+| AB-P0-08 | Resolver contrato de paginación y navegación TV | `movicom`, `docs/AGENT_PROTOCOL.md`, `UISession` | `ui/frame.py`, `ui/session.py`, `docs/AGENT_PROTOCOL.md`, tests | AB-P0-01 | `more` tiene semántica única; números/IDs válidos están documentados; DPAD no usa swipe fijo y `scroll` es separado | PENDIENTE |
+| AB-P0-09 | Crear gate de regresión del núcleo | CI de `pyt-androidtv`, ejemplos del bridge | `tests/`, workflow CI si existe | AB-P0-02..AB-P0-08 | Parser, selector, frame, pack, executor, paginación, DPAD y errores pasan con `compileall`, Ruff y tests reproducibles | PENDIENTE |
+
+### Tareas P1 — MGAndroid y Android TV
+
+| ID | Tarea | Fuentes de procedencia | Archivos objetivo | Dependencias | Validación / definición de terminado | Estado |
+|---|---|---|---|---|---|---|
+| AB-P1-01 | Implementar lifecycle MGAndroid | `Flujo_android/app.py`, `Flujo_android/mgandroid.py`, `tvbox-controller/mgandroid.py` | `workflows/`, pack MGAndroid, `ui/session.py` | AB-P0-07 | `wait_ready`, `ensure_home`, `restart` y `close` tienen timeout, estado de origen, recovery limitado y frame de salida | PENDIENTE |
+| AB-P1-02 | Implementar navegación de categorías y estado MGAndroid | `Flujo_android/mgandroid.py`, `tvbox-controller/mgandroid.py` | workflows y pack | AB-P1-01 | Live, movies, series, anime, special, settings, history y favorites se ejecutan con selectores; cada transición se verifica | PENDIENTE |
+| AB-P1-03 | Implementar panel y búsqueda de canales | `channel_extractor.py`, `tvbox-controller/mgandroid.py` | pack, workflows, fixtures | AB-P0-07, AB-P0-08 | Panel, categorías, lista, canal actual, selección por nombre, búsqueda y up/down funcionan sin `left > 300` fijo | PENDIENTE |
+| AB-P1-04 | Añadir snapshot de dispositivo y estado TV | `pyt-androidtv/models.py`, `BaseTV`, `basetv/state.py` | `devices/`, `diagnostics/`, exceptions, tests | AB-P0-09 | Doctor distingue metadata, power, foreground y media state; no incluye PII por defecto ni altera frames | PENDIENTE |
+| AB-P1-05 | Añadir volumen, media, power y key allowlist | `pyt-androidtv/constants.py`, `BaseTV`, `AndroidTV`, `FireTV` | `adb/transport.py`, `devices/`, adapters, tests | AB-P1-04 | Verbos semánticos generan comandos correctos, validan dispositivo y rechazan keycodes arbitrarios | PENDIENTE |
+| AB-P1-06 | Añadir captura, transferencia y operación larga controlada | `pyt-androidtv/adb/*`, `BaseTV.screen_record()`, `tvbox-controller/device.py` | `adb/transport.py`, `diagnostics/`, adapters | AB-P0-09 | `screencap`, `pull`, `push` y grabación tienen allowlist de paths, límites y cleanup; no exponen imagen automáticamente al LLM | PENDIENTE |
+| AB-P1-07 | Normalizar errores, reconnect y wakeup | excepciones de `pyt-androidtv`, runtime MCP, `movicom` retries | `exceptions.py`, runtime MCP/REST, transport, tests | AB-P1-04 | Errores serializan códigos estables; dispositivo perdido se recupera con retry limitado y serial explícito | PENDIENTE |
+| AB-P1-08 | Endurecer REST y exponer capacidades mínimas | `tvbox-controller/app.py`, REST actual del bridge | `adapters/rest.py`, configuración y docs | AB-P1-07 | REST tiene auth o límite de red documentado, CORS allowlist, lock, health real, validación y errores HTTP estructurados | PENDIENTE |
+
+### Tareas P2 — extensiones y adapters separados
+
+| ID | Tarea | Fuentes de procedencia | Archivos objetivo | Dependencias | Validación / definición de terminado | Estado |
+|---|---|---|---|---|---|---|
+| AB-P2-01 | Implementar discovery y pairing como provisioning explícito | `pyt-androidtv/wireless/*` | `provisioning/`, adapters, docs | AB-P1-07 | Scan valida handshake; pairing exige aprobación, no imprime secretos y distingue paired/connected | PENDIENTE |
+| AB-P2-02 | Implementar diagnóstico modular completo | `pyt-androidtv/diagnostics/*` | `diagnostics/`, `android_doctor`, tests | AB-P1-04 | Quick/full report separados, redacción de PII, límites de respuesta y ejecución bajo demanda | PENDIENTE |
+| AB-P2-03 | Añadir providers OCR/CV opt-in | `tvbox-controller/ocr.py`, `vision.py`, `engine.py` | `providers/vision/`, executor, extras | AB-P1-06 | Provider devuelve candidato y confianza; executor valida frame fresco, transición y umbral | PENDIENTE |
+| AB-P2-04 | Añadir LLM Vision con consentimiento | `tvbox-controller/llm_vision.py`, policies de `AGENTS.md` | adapter/provider y configuración | AB-P2-03 | Imagen no sale sin aprobación; respuesta no ejecuta shell; se registra solo evidencia no sensible | PENDIENTE |
+| AB-P2-05 | Implementar system lane de `movicom` | tools system de `movicom` | adapters/system, policies, schemas | AB-P1-07 | App, intent, web, notifications, contacts y camera tienen schemas, allowlists, errores y aprobación sensible | PENDIENTE |
+| AB-P2-06 | Implementar runner de workflows genéricos | workflow model de `movicom`, `workflows/model.py` | `workflows/runner.py`, schemas, tests | AB-P0-06, AB-P1-07 | Cada step reevalúa pantalla, no persiste coordenadas, soporta cancelación y devuelve evidencia estructurada | PENDIENTE |
+| AB-P2-07 | Crear adapter Home Assistant sobre runtime común | `pyt-androidtv/custom_components/*` | adapter separado, docs | AB-P1-08 | HA no crea ADB secundario, traduce capacidades del bridge y conserva aprobación/seguridad | PENDIENTE |
+| AB-P2-08 | Crear despliegue Docker/n8n opcional | `tvbox-controller/Dockerfile`, compose y REST | `deploy/`, docs, CI | AB-P1-08 | Healthcheck válido, red parametrizada, auth documentada y dependencias opcionales separadas del core | PENDIENTE |
+
+### Reglas de ejecución del backlog
+
+1. No empezar P1/P2 mientras `AB-P0-09` no pase.
+2. Cada tarea debe conservar la procedencia en código o documentación y actualizar esta matriz cuando cambie el estado.
+3. Una tarea se marca terminada solo si cumple su criterio de aceptación y tiene validación reproducible; una implementación parcial permanece `EN_PROGRESO`.
+4. Si una fuente contradice el contrato del bridge, se conserva como evidencia de procedencia, no como comportamiento canónico.
+5. Los cambios de core deben pasar por `docs/ARCHITECTURE.md`, `docs/AGENT_PROTOCOL.md` y, cuando afecten MCP, `docs/MCP.md`.
+6. No copiar `custom_components`, `TVDevice`, `MGAndroidController` ni motores de visión como bloques monolíticos; extraer contratos y adapters por responsabilidad.
+7. Antes de migrar datos MGAndroid desde un dump real, sanitizar textos, cuentas, tokens, screenshots y cualquier PII.
 
 ## 11. Decisión final de arquitectura
 
