@@ -34,6 +34,9 @@
     ],
     "speed": [{"resource_id": "tv_main_speed"}]
   },
+  "vod": {
+    "item": [{"resource_id": "tv_vod_name"}]
+  },
   "input": {
     "search_field": [
       {"resource_id": "edit_search", "class_name": "android.widget.EditText"},

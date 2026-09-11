@@ -15,6 +15,7 @@ from android_agent_bridge.ui.session import UISession
 ROOT = Path(__file__).resolve().parents[1]
 KNOWLEDGE = ROOT / "knowledge" / "apps"
 HOME_XML = (ROOT / "examples" / "mgandroid_home.xml").read_text(encoding="utf-8")
+LIVE_XML = (ROOT / "examples" / "mgandroid_live.xml").read_text(encoding="utf-8")
 
 
 class FakeADBTransport:
@@ -46,6 +47,8 @@ class FakeADBTransport:
 
     def tap(self, x: int, y: int) -> None:
         self.calls.append(("tap", (str(x), str(y))))
+        if self.xml == HOME_XML:
+            self.xml = LIVE_XML
 
     def keyevent(self, key: str) -> None:
         self.calls.append(("keyevent", (key,)))
@@ -277,3 +280,16 @@ def test_named_pack_selectors_support_region_and_ancestor_boundaries() -> None:
         },
     )
     assert channel.text == "ESPN HD"
+
+
+
+
+def test_pack_navigation_actions_declare_verified_destination_states() -> None:
+    pack = KnowledgeRegistry(KNOWLEDGE).resolve("mgandroid")
+    assert pack is not None
+
+    assert pack.action_specs["open_live"].to_screen == "live"
+    assert pack.action_specs["open_movies"].to_screen == "vod"
+    assert pack.action_specs["open_series"].to_screen == "vod"
+    assert pack.action_specs["open_anime"].to_screen == "vod"
+    assert pack.action_specs["open_special"].to_screen == "vod"

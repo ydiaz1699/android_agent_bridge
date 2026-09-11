@@ -28,6 +28,7 @@ El bridge presenta la pantalla como una interfaz compacta para el agente:
 - **Numérica:** `ui do 2`; válida solo para el frame leído inmediatamente antes.
 - **Verbo:** `ui do back`, `ui do down`, `ui do type "texto"`; se vuelve a resolver contra la pantalla viva y es la forma recomendada para workflows.
 - **Paginación:** `ui do more`; revela acciones adicionales sin cambiar el significado de las ya mostradas. La implementación mantiene las acciones de páginas anteriores con sus números y conserva `more` en una posición estable; las acciones nuevas se añaden después.
+- **Acción declarativa con destino:** una acción de knowledge pack puede declarar `to`; tras ejecutar el target sobre el frame fresco, el ejecutor debe leer otro frame y comparar el estado reconocido. Si no coincide devuelve `verification_failed` y el frame observado.
 - **Navegación TV:** `up`, `down`, `left` y `right` son eventos DPAD. `scroll_up` y `scroll_down` son swipes separados sobre el viewport detectado.
 
 Cada acción debe producir una nueva lectura o un error estructurado:
@@ -40,7 +41,7 @@ Cada acción debe producir una nueva lectura o un error estructurado:
 {"error":"no action #9","error_code":"action_not_found","frame":{...}}
 ```
 
-Los errores de sesión usan códigos estables, entre ellos `action_not_found`, `input_required`, `pagination_end`, `state_mismatch`, `selector_not_found` y `action_failed`.
+Los errores de sesión usan códigos estables, entre ellos `action_not_found`, `input_required`, `pagination_end`, `state_mismatch`, `selector_not_found`, `verification_failed` y `action_failed`.
 
 ## Seguridad del contexto
 
