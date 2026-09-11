@@ -7,6 +7,8 @@
     </node>
     <node index="2" text="VIVO" resource-id="vod_category_name" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="true" enabled="true" bounds="[560,300][880,460]" />
     <node index="3" text="SERIE" resource-id="vod_category_name" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="true" enabled="true" bounds="[920,300][1240,460]" />
-    <node index="4" text="" resource-id="iv_setting" class="android.widget.ImageButton" content-desc="Ajustes" clickable="true" enabled="true" bounds="[1780,30][1870,120]" />
+    <node index="4" text="ANIME" resource-id="vod_category_name" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="true" enabled="true" bounds="[1280,300][1600,460]" />
+    <node index="5" text="ESPECIAL" resource-id="vod_category_name" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="true" enabled="true" bounds="[1280,500][1600,660]" />
+    <node index="6" text="" resource-id="iv_setting" class="android.widget.ImageButton" content-desc="Ajustes" clickable="true" enabled="true" bounds="[1780,30][1870,120]" />
   </node>
 </hierarchy>

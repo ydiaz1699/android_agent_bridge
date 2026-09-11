@@ -36,6 +36,7 @@ class KnowledgeActionSpec:
     from_screen: str
     intent: str
     strategies: tuple[dict[str, Any], ...]
+    to_screen: str | None = None
 
     @property
     def parameters(self) -> frozenset[str]:
@@ -73,6 +74,7 @@ def compile_actions(
     raw: dict[str, Any],
     *,
     selectors: dict[str, Any] | None = None,
+    states: dict[str, Any] | None = None,
 ) -> dict[str, KnowledgeActionSpec]:
     """Validate pack actions and return typed specs.
 
@@ -90,9 +92,14 @@ def compile_actions(
             raise InvalidKnowledgeAction(f"Action must be an object: {identifier}")
         from_screen = definition.get("from")
         intent = definition.get("intent")
+        to_screen = definition.get("to")
         strategies = definition.get("strategies")
         if not isinstance(from_screen, str) or not from_screen:
             raise InvalidKnowledgeAction(f"Action has invalid from state: {identifier}")
+        if to_screen is not None and (not isinstance(to_screen, str) or not to_screen):
+            raise InvalidKnowledgeAction(f"Action has invalid to state: {identifier}")
+        if to_screen is not None and states is not None and to_screen not in states:
+            raise InvalidKnowledgeAction(f"Action references unknown to state: {identifier}: {to_screen}")
         if intent not in allowed_intents:
             raise InvalidKnowledgeAction(f"Unsupported intent for {identifier}: {intent!r}")
         if not isinstance(strategies, list) or not strategies:
@@ -115,6 +122,7 @@ def compile_actions(
             from_screen=from_screen,
             intent=intent,
             strategies=tuple(normalized),
+            to_screen=to_screen,
         )
     return compiled
 

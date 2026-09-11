@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<hierarchy rotation="0">
+  <node index="0" text="" resource-id="com.android.mgandroid:id/main_view" class="android.widget.FrameLayout" package="com.android.mgandroid" content-desc="" clickable="false" enabled="true" bounds="[0,0][1920,1080]">
+    <node index="0" text="PELÍCULAS" resource-id="com.android.mgandroid:id/vod_category_name" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="false" enabled="true" bounds="[80,80][420,140]" />
+    <node index="1" text="Contenido de ejemplo" resource-id="com.android.mgandroid:id/tv_vod_name" class="android.widget.TextView" package="com.android.mgandroid" content-desc="" clickable="true" enabled="true" bounds="[160,300][620,400]" />
+  </node>
+</hierarchy>

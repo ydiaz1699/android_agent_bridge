@@ -1,6 +1,7 @@
 {
   "open_live": {
     "from": "home",
+    "to": "live",
     "intent": "navigate",
     "strategies": [
       {"selector": "home.category", "text": "VIVO"},
@@ -9,6 +10,7 @@
   },
   "open_movies": {
     "from": "home",
+    "to": "vod",
     "intent": "navigate",
     "strategies": [
       {"selector": "home.category", "text": "PELÍCULA"},
@@ -17,10 +19,29 @@
   },
   "open_series": {
     "from": "home",
+    "to": "vod",
     "intent": "navigate",
     "strategies": [
       {"selector": "home.category", "text": "SERIE"},
       {"text": "SERIE"}
+    ]
+  },
+  "open_anime": {
+    "from": "home",
+    "to": "vod",
+    "intent": "navigate",
+    "strategies": [
+      {"selector": "home.category", "text": "ANIME"},
+      {"text": "ANIME"}
+    ]
+  },
+  "open_special": {
+    "from": "home",
+    "to": "vod",
+    "intent": "navigate",
+    "strategies": [
+      {"selector": "home.category", "text": "ESPECIAL"},
+      {"text": "ESPECIAL"}
     ]
   },
   "select_channel": {
