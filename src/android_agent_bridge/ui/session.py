@@ -13,6 +13,7 @@ from android_agent_bridge.errors import (
     INPUT_REQUIRED,
     KNOWLEDGE_PACK_NOT_FOUND,
     PAGINATION_END,
+    VERIFICATION_FAILED,
 )
 from android_agent_bridge.knowledge.actions import KnowledgeActionError
 from android_agent_bridge.knowledge.registry import KnowledgePack, KnowledgeRegistry
@@ -205,11 +206,21 @@ class UISession:
                 self.device.tap_node(node)
             else:
                 self._tap(action)
+            next_frame = self.frame()
+            if spec.to_screen is not None and next_frame.screen != spec.to_screen:
+                return UIResult(
+                    error=(
+                        f"verification failed: expected {spec.to_screen}, "
+                        f"observed {next_frame.screen}"
+                    ),
+                    error_code=VERIFICATION_FAILED,
+                    frame=next_frame,
+                )
         except KnowledgeActionError as exc:
             return UIResult(error=f"{exc.code}: {exc}", error_code=exc.code, frame=current)
         except ValueError as exc:
             return UIResult(error=str(exc), error_code=ACTION_FAILED, frame=current)
-        return UIResult(did=action.action_id, frame=self.frame())
+        return UIResult(did=action.action_id, frame=next_frame)
 
     def _scroll(self, action: Action) -> None:
         if action.node is None or action.node.bounds is None:
